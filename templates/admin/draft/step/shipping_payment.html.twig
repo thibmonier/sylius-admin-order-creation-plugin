@@ -6,7 +6,12 @@
         {{ form_errors(form) }}
         {% for child in form %}
             {% if child.vars.name != '_token' %}
-                <div class="mb-4" data-test-choice="{{ child.vars.name }}">{{ form_row(child) }}</div>
+                <div class="mb-4" data-test-choice="{{ child.vars.name }}">
+                    {{ form_row(child) }}
+                    {% if child.vars.choices is empty %}
+                        <div class="alert alert-warning" data-test-no-method>{{ 'tmonier_admin_order.ui.no_method_available'|trans }}</div>
+                    {% endif %}
+                </div>
             {% endif %}
         {% endfor %}
     </div>

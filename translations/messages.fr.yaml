@@ -1,5 +1,6 @@
 tmonier_admin_order:
     ui:
+        no_method_available: "Aucun mode n'est disponible pour cette commande et cette adresse : vérifiez l'adresse ou la configuration des modes (zones, canal)."
         new_order: 'Nouvelle commande'
         new_order_subtitle: "Commande par téléphone ou en back-office pour le compte d'un client"
         draft_orders: 'Commandes en préparation'

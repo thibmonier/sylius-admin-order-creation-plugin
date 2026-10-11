@@ -1,5 +1,6 @@
 tmonier_admin_order:
     ui:
+        no_method_available: "Nessun metodo disponibile per questo ordine e questo indirizzo: controlla l'indirizzo o la configurazione dei metodi (zone, canale)."
         new_order: 'Nuovo ordine'
         new_order_subtitle: 'Ordine telefonico o da back-office per conto di un cliente'
         draft_orders: 'Ordini in bozza'

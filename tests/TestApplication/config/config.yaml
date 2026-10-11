@@ -16,3 +16,8 @@ doctrine:
                         type: attribute
                         dir: '%kernel.project_dir%/../../../tests/TestApplication/src/Entity'
                         prefix: Tests\Tmonier\SyliusAdminOrderCreationPlugin
+
+# The functional tests check that price overrides and manual discounts need this role.
+when@test:
+    tmonier_sylius_admin_order_creation:
+        adjustments_role: ROLE_TMONIER_ORDER_ADJUSTMENTS

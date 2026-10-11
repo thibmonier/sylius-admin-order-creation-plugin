@@ -1,5 +1,6 @@
 tmonier_admin_order:
     ui:
+        no_method_available: 'Brak dostępnej metody dla tego zamówienia i adresu: sprawdź adres lub konfigurację metod (strefy, kanał).'
         new_order: 'Nowe zamówienie'
         new_order_subtitle: 'Zamówienie telefoniczne lub z zaplecza w imieniu klienta'
         draft_orders: 'Szkice zamówień'

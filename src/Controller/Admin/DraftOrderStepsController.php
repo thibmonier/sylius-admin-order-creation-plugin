@@ -242,7 +242,8 @@ final class DraftOrderStepsController extends AbstractController
         $shipments = $this->checkout->canSelectShipping($order) ? $this->getShipmentChoices($order) : [];
         $payment = $order->getLastPayment(PaymentInterface::STATE_CART);
         $paymentMethods = null;
-        if (null !== $payment && $this->checkout->canSelectPayment($order)) {
+        // From "addressed", the payment method becomes selectable once the shipping one is.
+        if (null !== $payment && ($this->checkout->canSelectPayment($order) || [] !== $shipments)) {
             /** @var list<PaymentMethodInterface> $paymentMethods */
             $paymentMethods = array_values($this->paymentMethodsResolver->getSupportedMethods($payment));
         }

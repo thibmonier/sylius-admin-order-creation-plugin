@@ -62,7 +62,7 @@
         <div class="h3 mb-0">{{ 'sylius.ui.order_total'|trans }}</div>
         <div class="h3 mb-0" data-test-draft-total>{{ money.format(order.total, currency) }}</div>
     </div>
-    {% if ctx.manual_discount is not null %}
+    {% if ctx.manual_discount|default(null) is not null %}
         <div class="card-footer text-secondary small" data-test-draft-manual-discount>
             {{ 'tmonier_admin_order.ui.manual_discount'|trans }}: {{ money.format(ctx.manual_discount.amount, currency) }} &middot; {{ ctx.manual_discount.reason }}
         </div>
