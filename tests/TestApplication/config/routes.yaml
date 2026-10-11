@@ -1,0 +1,2 @@
+tmonier_sylius_admin_order_creation:
+    resource: "@TmonierSyliusAdminOrderCreationPlugin/config/routes.yaml"
