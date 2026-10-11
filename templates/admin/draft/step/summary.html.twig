@@ -1,0 +1,92 @@
+{% from '@SyliusAdmin/shared/helper/address.html.twig' import address %}
+{% import '@SyliusAdmin/shared/helper/money.html.twig' as money %}
+
+{% set form = ctx.form %}
+
+{% if ctx.violations is not empty %}
+    <div class="alert alert-danger" role="alert" data-test-checkout-violations>
+        <h4 class="alert-title">{{ 'tmonier_admin_order.ui.cannot_complete'|trans }}</h4>
+        <ul class="mb-0">
+            {% for message in ctx.violations %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<div class="card mb-3">
+    <div class="table-responsive">
+        <table class="table table-vcenter card-table" data-test-summary-items>
+            <thead>
+                <tr>
+                    <th>{{ 'sylius.ui.item'|trans }}</th>
+                    <th class="text-end">{{ 'sylius.ui.unit_price'|trans }}</th>
+                    <th class="text-end">{{ 'sylius.ui.quantity'|trans }}</th>
+                    <th class="text-end">{{ 'sylius.ui.total'|trans }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.items %}
+                    <tr>
+                        <td>{{ item.product.name }} <span class="text-secondary small">{{ item.variant.code }}</span></td>
+                        <td class="text-end">{{ money.format(item.fullDiscountedUnitPrice, order.currencyCode) }}</td>
+                        <td class="text-end">{{ item.quantity }}</td>
+                        <td class="text-end">{{ money.format(item.total, order.currencyCode) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="row row-cards mb-3">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h3 class="card-title">{{ 'sylius.ui.billing_address'|trans }}</h3></div>
+            <div class="card-body" data-test-summary-billing-address>{% if order.billingAddress is not null %}{{ address(order.billingAddress) }}{% endif %}</div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h3 class="card-title">{{ 'sylius.ui.shipping_address'|trans }}</h3></div>
+            <div class="card-body" data-test-summary-shipping-address>{% if order.shippingAddress is not null %}{{ address(order.shippingAddress) }}{% endif %}</div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-body">
+        {% for shipment in order.shipments %}
+            <div data-test-summary-shipping-method><strong>{{ 'sylius.ui.shipping_method'|trans }}:</strong> {{ shipment.method.name|default('-') }}</div>
+        {% endfor %}
+        {% for payment in order.payments %}
+            <div data-test-summary-payment-method><strong>{{ 'sylius.ui.payment_method'|trans }}:</strong> {{ payment.method.name|default('-') }}</div>
+        {% endfor %}
+        <div class="mt-2">
+            <a href="{{ path('tmonier_admin_order_draft_shipping_payment', {'id': order.id}) }}">{{ 'sylius.ui.edit'|trans }}</a>
+        </div>
+    </div>
+</div>
+
+{{ form_start(form, {attr: {novalidate: 'novalidate', 'data-test-complete-form': ''}}) }}
+<div class="card mb-3">
+    <div class="card-body">
+        {{ form_errors(form) }}
+        {{ form_row(form.notes) }}
+        {{ form_row(form.sendConfirmationEmail) }}
+        {% if form.sendPaymentLink is defined %}
+            {{ form_row(form.sendPaymentLink) }}
+        {% endif %}
+    </div>
+    <div class="card-footer d-flex justify-content-between">
+        <a class="btn" href="{{ path('tmonier_admin_order_draft_items', {'id': order.id}) }}">
+            {{ ux_icon('tabler:arrow-left', {'class': 'icon'}) }}
+            {{ 'tmonier_admin_order.ui.step.items'|trans }}
+        </a>
+        <button type="submit" class="btn btn-success" data-test-place-order {{ ctx.violations is not empty ? 'disabled' }}>
+            {{ ux_icon('tabler:check', {'class': 'icon'}) }}
+            {{ 'tmonier_admin_order.ui.place_order'|trans }}
+        </button>
+    </div>
+</div>
+{{ form_end(form) }}

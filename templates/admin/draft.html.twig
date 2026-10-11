@@ -1,0 +1,18 @@
+{% extends '@TmonierSyliusAdminOrderCreationPlugin/admin/page/layout.html.twig' %}
+
+{% set customer_label = order.customer.fullName|trim is not empty ? order.customer.fullName ~ ' <' ~ order.customer.email ~ '>' : order.customer.email %}
+{% set page_title = 'tmonier_admin_order.ui.new_order_for' %}
+{% set page_title_parameters = {'%customer%': customer_label} %}
+{% set page_context = _context|filter((value, key) => key not in ['app', 'page_context', 'page_title', 'page_title_parameters'])|merge({
+    title: 'tmonier_admin_order.ui.new_order_for',
+    title_parameters: {'%customer%': customer_label},
+    subtitle: ('tmonier_admin_order.ui.step.' ~ step)|trans,
+    body_template: '@TmonierSyliusAdminOrderCreationPlugin/admin/draft/body.html.twig',
+    actions_template: '@TmonierSyliusAdminOrderCreationPlugin/admin/draft/actions.html.twig',
+    breadcrumbs: [
+        { name: 'sylius.ui.dashboard', url: path('sylius_admin_dashboard'), active: false },
+        { name: 'sylius.ui.orders', url: path('sylius_admin_order_index'), active: false },
+        { name: 'tmonier_admin_order.ui.draft_orders', url: path('tmonier_admin_order_draft_index'), active: false },
+        { name: ('tmonier_admin_order.ui.step.' ~ step), active: true },
+    ],
+}) %}

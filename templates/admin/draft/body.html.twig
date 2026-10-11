@@ -1,0 +1,13 @@
+{% set ctx = hookable_metadata.context %}
+{% set order = ctx.order %}
+
+{% include '@TmonierSyliusAdminOrderCreationPlugin/admin/draft/_steps.html.twig' %}
+
+<div class="row row-cards">
+    <div class="col-lg-8" data-test-draft-step="{{ ctx.step }}">
+        {% include '@TmonierSyliusAdminOrderCreationPlugin/admin/draft/step/' ~ ctx.step ~ '.html.twig' %}
+    </div>
+    <div class="col-lg-4">
+        {% include '@TmonierSyliusAdminOrderCreationPlugin/admin/draft/_summary.html.twig' %}
+    </div>
+</div>

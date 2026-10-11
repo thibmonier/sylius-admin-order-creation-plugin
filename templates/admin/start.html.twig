@@ -1,0 +1,15 @@
+{% extends '@TmonierSyliusAdminOrderCreationPlugin/admin/page/layout.html.twig' %}
+
+{% set page_title = 'tmonier_admin_order.ui.new_order' %}
+{% set page_context = {
+    form,
+    title: 'tmonier_admin_order.ui.new_order',
+    subtitle: 'tmonier_admin_order.ui.new_order_subtitle'|trans,
+    body_template: '@TmonierSyliusAdminOrderCreationPlugin/admin/start/body.html.twig',
+    actions_template: '@TmonierSyliusAdminOrderCreationPlugin/admin/start/actions.html.twig',
+    breadcrumbs: [
+        { name: 'sylius.ui.dashboard', url: path('sylius_admin_dashboard'), active: false },
+        { name: 'sylius.ui.orders', url: path('sylius_admin_order_index'), active: false },
+        { name: 'tmonier_admin_order.ui.new_order', active: true },
+    ],
+} %}

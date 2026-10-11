@@ -1,0 +1,19 @@
+tmonier_admin_order:
+    draft_created: "L'ordine in bozza è stato creato."
+    draft_deleted: "L'ordine in bozza è stato eliminato."
+    reorder_impossible: 'Questo ordine non può essere ordinato di nuovo.'
+    reorder_items_skipped: 'Questi articoli non sono più in vendita e non sono stati copiati: %items%.'
+    reorder_created: 'È stata creata una nuova bozza da questo ordine.'
+    existing_customer_used: "Un cliente usa già questa e-mail: l'ordine viene creato per questo cliente."
+    item_added: "L'articolo è stato aggiunto."
+    items_updated: 'Gli articoli sono stati aggiornati.'
+    item_removed: "L'articolo è stato rimosso."
+    discount_applied: 'Lo sconto manuale è stato applicato.'
+    discount_removed: 'Lo sconto manuale è stato rimosso.'
+    coupon_invalid: 'Questo coupon non è valido per questo ordine.'
+    coupon_applied: 'Il coupon è stato applicato.'
+    coupon_removed: 'Il coupon è stato rimosso.'
+    no_items: 'Aggiungi prima almeno un articolo.'
+    order_placed: "L'ordine %number% è stato effettuato."
+    payment_link_sent: 'Il link di pagamento è stato inviato al cliente.'
+    email_failed: "L'ordine è stato effettuato ma non è stato possibile inviare un'e-mail."

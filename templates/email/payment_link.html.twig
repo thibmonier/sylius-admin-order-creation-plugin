@@ -1,0 +1,29 @@
+{% extends '@SyliusCore/Email/layout.html.twig' %}
+
+{% block subject %}
+    {{ 'tmonier_admin_order.email.payment_link.subject'|trans({'%number%': order.number}, null, localeCode)|raw }}
+{% endblock %}
+
+{% block content %}
+    {% set url = sylius_channel_url(path('sylius_shop_order_show', {'tokenValue': order.tokenValue, '_locale': localeCode}), channel) %}
+
+    <div style="text-align: center; margin-bottom: 30px;">
+        {{ 'tmonier_admin_order.email.payment_link.intro'|trans({}, null, localeCode) }}
+        <div style="margin: 10px 0;">
+            <span style="border: 1px solid #eee; padding: 10px; color: #1abb9c; font-size: 28px;">
+                {{ order.number }}
+            </span>
+        </div>
+        {{ 'tmonier_admin_order.email.payment_link.amount'|trans({'%amount%': order.total|sylius_format_money(order.currencyCode, localeCode)}, null, localeCode) }}
+    </div>
+
+    <div style="text-align: center; margin-bottom: 30px;">
+        <a href="{{ url|raw }}" style="display: inline-block; text-align: center; background: #1abb9c; padding: 18px 28px; color: #fff; text-decoration: none; border-radius: 3px;">
+            {{ 'tmonier_admin_order.email.payment_link.pay'|trans({}, null, localeCode) }}
+        </a>
+    </div>
+
+    <div style="text-align: center;">
+        {{ 'tmonier_admin_order.email.payment_link.thank_you'|trans({}, null, localeCode) }}
+    </div>
+{% endblock %}

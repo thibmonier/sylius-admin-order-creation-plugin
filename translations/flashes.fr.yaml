@@ -1,0 +1,19 @@
+tmonier_admin_order:
+    draft_created: 'La commande en préparation a été créée.'
+    draft_deleted: 'La commande en préparation a été supprimée.'
+    reorder_impossible: 'Cette commande ne peut pas être recommandée.'
+    reorder_items_skipped: "Ces articles ne sont plus vendus et n'ont pas été copiés : %items%."
+    reorder_created: 'Une nouvelle commande en préparation a été créée à partir de cette commande.'
+    existing_customer_used: 'Un client utilise déjà cet e-mail : la commande est créée pour ce client.'
+    item_added: "L'article a été ajouté."
+    items_updated: 'Les articles ont été mis à jour.'
+    item_removed: "L'article a été retiré."
+    discount_applied: 'La remise manuelle a été appliquée.'
+    discount_removed: 'La remise manuelle a été supprimée.'
+    coupon_invalid: "Ce coupon n'est pas valable pour cette commande."
+    coupon_applied: 'Le coupon a été appliqué.'
+    coupon_removed: 'Le coupon a été retiré.'
+    no_items: "Ajoutez d'abord au moins un article."
+    order_placed: 'La commande %number% a été passée.'
+    payment_link_sent: 'Le lien de paiement a été envoyé au client.'
+    email_failed: "La commande a été passée mais un e-mail n'a pas pu être envoyé."

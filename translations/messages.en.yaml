@@ -1,0 +1,74 @@
+tmonier_admin_order:
+    ui:
+        new_order: 'New order'
+        new_order_subtitle: 'Phone or back-office order on behalf of a customer'
+        draft_orders: 'Draft orders'
+        draft_orders_subtitle: 'Orders being prepared in the back office, not placed yet'
+        channel_and_language: 'Channel and language'
+        or_new_customer: 'or a new customer'
+        new_customer_help: 'A guest customer is created with this e-mail, unless a customer already uses it.'
+        start: 'Start the order'
+        no_drafts: 'There is no draft order.'
+        created_by: 'Created by'
+        last_modified: 'Last modified'
+        continue: Continue
+        delete_draft: 'Delete draft'
+        delete_draft_confirm: 'Delete this draft order?'
+        create_order: 'Create order'
+        reorder: Reorder
+        created_by_admin: 'Back office, by %name%'
+        deleted_admin: 'a deleted administrator'
+        reorder_of: 'Reorder of'
+        manual_discount: 'Manual discount'
+        manual_discount_label: Discount
+        payment_link_sent_at: 'Payment link sent on %date%'
+        new_order_for: 'New order for %customer%'
+        step:
+            items: Items
+            address: Addresses
+            shipping_payment: 'Shipping & payment'
+            summary: Summary
+        has_account: 'Shop account'
+        guest: Guest
+        no_items: 'No item yet: search for a product below.'
+        custom_price: 'Custom price'
+        items_help: 'Set a quantity to 0 to remove an item.'
+        update_items: 'Update items'
+        add_product: 'Add a product'
+        add: Add
+        apply_coupon: Apply
+        apply_discount: Apply
+        next_step: 'Next: %step%'
+        address_book: 'Address book'
+        use_address: 'Use this address'
+        shipping_address_help: 'Only used when "Different shipping address" is checked.'
+        cannot_complete: 'The order cannot be placed yet'
+        place_order: 'Place order'
+    form:
+        locale: Language
+        locale_placeholder: 'Default language of the channel'
+        locale_help: 'Language of the e-mails sent to the customer.'
+        existing_customer: 'Existing customer'
+        search_customer: 'Search by e-mail or name'
+        product: Product
+        search_product: 'Search by name or code'
+        custom_unit_price: 'Custom unit price'
+        discount_amount: Amount
+        discount_amount_help: 'Spread over the items like an order promotion. 0 removes the discount.'
+        discount_reason: Reason
+        discount_reason_help: 'Internal, not shown to the customer.'
+        coupon_help: 'Leave empty to remove the coupon.'
+        different_shipping_address: 'Different shipping address'
+        shipment_method: 'Shipping method (shipment %number%)'
+        notes: Notes
+        notes_help: 'Order notes, visible to the customer.'
+        send_confirmation_email: 'Send the order confirmation e-mail to the customer'
+        send_payment_link: 'Send a payment link e-mail'
+        send_payment_link_help: 'The customer pays from the order page of the shop.'
+    email:
+        payment_link:
+            subject: 'Payment of your order %number%'
+            intro: 'An order has been placed for you:'
+            amount: 'Amount to pay: %amount%'
+            pay: 'Pay my order'
+            thank_you: 'Thank you!'

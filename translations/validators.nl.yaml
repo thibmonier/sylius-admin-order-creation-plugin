@@ -1,0 +1,16 @@
+tmonier_admin_order:
+    channel:
+        not_blank: 'Kies een kanaal.'
+    customer:
+        required: 'Kies een bestaande klant of vul het e-mailadres van een nieuwe klant in.'
+        ambiguous: 'Kies een bestaande klant of vul een nieuw e-mailadres in, niet allebei.'
+    locale:
+        not_in_channel: 'Deze taal is niet beschikbaar in het gekozen kanaal.'
+    item:
+        variant_required: 'Kies een product.'
+    discount:
+        reason_required: 'Geef een reden voor de korting op.'
+    shipping_method:
+        required: 'Kies een verzendmethode.'
+    payment_method:
+        required: 'Kies een betaalmethode.'

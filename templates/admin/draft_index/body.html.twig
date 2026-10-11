@@ -1,0 +1,50 @@
+{% import '@SyliusAdmin/shared/helper/money.html.twig' as money %}
+
+{% set drafts = hookable_metadata.context.drafts %}
+
+<div class="card">
+    {% if drafts is empty %}
+        <div class="card-body text-secondary" data-test-no-drafts>{{ 'tmonier_admin_order.ui.no_drafts'|trans }}</div>
+    {% else %}
+        <div class="table-responsive">
+            <table class="table table-vcenter card-table" data-test-drafts>
+                <thead>
+                    <tr>
+                        <th>{{ 'sylius.ui.customer'|trans }}</th>
+                        <th>{{ 'sylius.ui.channel'|trans }}</th>
+                        <th class="text-end">{{ 'sylius.ui.items'|trans }}</th>
+                        <th class="text-end">{{ 'sylius.ui.total'|trans }}</th>
+                        <th>{{ 'tmonier_admin_order.ui.created_by'|trans }}</th>
+                        <th>{{ 'tmonier_admin_order.ui.last_modified'|trans }}</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for draft in drafts %}
+                        {% set order = draft.order %}
+                        <tr data-test-draft="{{ order.id }}">
+                            <td>
+                                <strong>{{ order.customer.fullName|default('') }}</strong>
+                                <div class="text-secondary">{{ order.customer.email|default('') }}</div>
+                            </td>
+                            <td>{% include '@SyliusAdmin/shared/grid/field/channel.html.twig' with { data: order.channel } %}</td>
+                            <td class="text-end">{{ order.totalQuantity }}</td>
+                            <td class="text-end">{{ money.format(order.total, order.currencyCode) }}</td>
+                            <td>{{ draft.adminName|default('-') }}</td>
+                            <td>{{ (order.updatedAt ?? order.createdAt)|format_datetime('medium', 'short') }}</td>
+                            <td class="text-end">
+                                <div class="btn-list justify-content-end flex-nowrap">
+                                    <a class="btn btn-sm" href="{{ path('tmonier_admin_order_draft_items', {'id': order.id}) }}" data-test-continue-draft>
+                                        {{ ux_icon('tabler:pencil', {'class': 'icon'}) }}
+                                        {{ 'tmonier_admin_order.ui.continue'|trans }}
+                                    </a>
+                                    {% include '@TmonierSyliusAdminOrderCreationPlugin/admin/draft/_delete_form.html.twig' with { order, small: true } %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+</div>

@@ -1,0 +1,7 @@
+<form action="{{ path('tmonier_admin_order_draft_delete', {'id': order.id}) }}" method="post" class="d-inline" data-test-delete-draft-form>
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token('tmonier_admin_order_delete_' ~ order.id) }}">
+    <button type="submit" class="btn btn-outline-danger{{ small|default(false) ? ' btn-sm' }}" onclick="return confirm('{{ 'tmonier_admin_order.ui.delete_draft_confirm'|trans|e('js') }}')" data-test-delete-draft>
+        {{ ux_icon('tabler:trash', {'class': 'icon'}) }}
+        {{ 'tmonier_admin_order.ui.delete_draft'|trans }}
+    </button>
+</form>

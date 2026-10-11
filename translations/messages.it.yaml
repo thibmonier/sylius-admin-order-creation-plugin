@@ -1,0 +1,74 @@
+tmonier_admin_order:
+    ui:
+        new_order: 'Nuovo ordine'
+        new_order_subtitle: 'Ordine telefonico o da back-office per conto di un cliente'
+        draft_orders: 'Ordini in bozza'
+        draft_orders_subtitle: 'Ordini preparati nel back-office, non ancora effettuati'
+        channel_and_language: 'Canale e lingua'
+        or_new_customer: 'o un nuovo cliente'
+        new_customer_help: 'Viene creato un cliente ospite con questa e-mail, a meno che un cliente la usi già.'
+        start: "Inizia l'ordine"
+        no_drafts: 'Non ci sono ordini in bozza.'
+        created_by: 'Creato da'
+        last_modified: 'Ultima modifica'
+        continue: Continua
+        delete_draft: 'Elimina bozza'
+        delete_draft_confirm: 'Eliminare questo ordine in bozza?'
+        create_order: 'Crea ordine'
+        reorder: 'Ordina di nuovo'
+        created_by_admin: 'Back-office, da %name%'
+        deleted_admin: 'un amministratore eliminato'
+        reorder_of: 'Nuovo ordine di'
+        manual_discount: 'Sconto manuale'
+        manual_discount_label: Sconto
+        payment_link_sent_at: 'Link di pagamento inviato il %date%'
+        new_order_for: 'Nuovo ordine per %customer%'
+        step:
+            items: Articoli
+            address: Indirizzi
+            shipping_payment: 'Spedizione e pagamento'
+            summary: Riepilogo
+        has_account: 'Account del negozio'
+        guest: Ospite
+        no_items: 'Nessun articolo: cerca un prodotto qui sotto.'
+        custom_price: 'Prezzo personalizzato'
+        items_help: 'Imposta la quantità a 0 per rimuovere un articolo.'
+        update_items: 'Aggiorna articoli'
+        add_product: 'Aggiungi un prodotto'
+        add: Aggiungi
+        apply_coupon: Applica
+        apply_discount: Applica
+        next_step: 'Avanti: %step%'
+        address_book: 'Rubrica indirizzi'
+        use_address: 'Usa questo indirizzo'
+        shipping_address_help: 'Usato solo se «Indirizzo di spedizione diverso» è selezionato.'
+        cannot_complete: "L'ordine non può ancora essere effettuato"
+        place_order: "Effettua l'ordine"
+    form:
+        locale: Lingua
+        locale_placeholder: 'Lingua predefinita del canale'
+        locale_help: 'Lingua delle e-mail inviate al cliente.'
+        existing_customer: 'Cliente esistente'
+        search_customer: 'Cerca per e-mail o nome'
+        product: Prodotto
+        search_product: 'Cerca per nome o codice'
+        custom_unit_price: 'Prezzo unitario personalizzato'
+        discount_amount: Importo
+        discount_amount_help: "Ripartito sugli articoli come una promozione dell'ordine. 0 rimuove lo sconto."
+        discount_reason: Motivo
+        discount_reason_help: 'Interno, non visibile al cliente.'
+        coupon_help: 'Lascia vuoto per rimuovere il coupon.'
+        different_shipping_address: 'Indirizzo di spedizione diverso'
+        shipment_method: 'Metodo di spedizione (spedizione %number%)'
+        notes: Note
+        notes_help: "Note dell'ordine, visibili al cliente."
+        send_confirmation_email: "Invia al cliente l'e-mail di conferma dell'ordine"
+        send_payment_link: "Invia un'e-mail con un link di pagamento"
+        send_payment_link_help: "Il cliente paga dalla pagina dell'ordine nel negozio."
+    email:
+        payment_link:
+            subject: 'Pagamento del tuo ordine %number%'
+            intro: 'È stato effettuato un ordine per te:'
+            amount: 'Importo da pagare: %amount%'
+            pay: 'Paga il mio ordine'
+            thank_you: Grazie!

@@ -1,0 +1,74 @@
+tmonier_admin_order:
+    ui:
+        new_order: 'Nowe zamówienie'
+        new_order_subtitle: 'Zamówienie telefoniczne lub z zaplecza w imieniu klienta'
+        draft_orders: 'Szkice zamówień'
+        draft_orders_subtitle: 'Zamówienia przygotowywane w panelu, jeszcze nie złożone'
+        channel_and_language: 'Kanał i język'
+        or_new_customer: 'lub nowy klient'
+        new_customer_help: 'Zostanie utworzony klient-gość z tym adresem e-mail, chyba że używa go już inny klient.'
+        start: 'Rozpocznij zamówienie'
+        no_drafts: 'Brak szkiców zamówień.'
+        created_by: 'Utworzone przez'
+        last_modified: 'Ostatnia zmiana'
+        continue: Kontynuuj
+        delete_draft: 'Usuń szkic'
+        delete_draft_confirm: 'Usunąć ten szkic zamówienia?'
+        create_order: 'Utwórz zamówienie'
+        reorder: 'Zamów ponownie'
+        created_by_admin: 'Panel, przez %name%'
+        deleted_admin: 'usuniętego administratora'
+        reorder_of: 'Ponowne zamówienie'
+        manual_discount: 'Rabat ręczny'
+        manual_discount_label: Rabat
+        payment_link_sent_at: 'Link do płatności wysłany %date%'
+        new_order_for: 'Nowe zamówienie dla %customer%'
+        step:
+            items: Produkty
+            address: Adresy
+            shipping_payment: 'Dostawa i płatność'
+            summary: Podsumowanie
+        has_account: 'Konto w sklepie'
+        guest: Gość
+        no_items: 'Brak produktów: wyszukaj produkt poniżej.'
+        custom_price: 'Cena indywidualna'
+        items_help: 'Ustaw ilość 0, aby usunąć produkt.'
+        update_items: 'Aktualizuj produkty'
+        add_product: 'Dodaj produkt'
+        add: Dodaj
+        apply_coupon: Zastosuj
+        apply_discount: Zastosuj
+        next_step: 'Dalej: %step%'
+        address_book: 'Książka adresowa'
+        use_address: 'Użyj tego adresu'
+        shipping_address_help: 'Używany tylko, gdy zaznaczono „Inny adres dostawy”.'
+        cannot_complete: 'Zamówienia nie można jeszcze złożyć'
+        place_order: 'Złóż zamówienie'
+    form:
+        locale: Język
+        locale_placeholder: 'Domyślny język kanału'
+        locale_help: 'Język wiadomości e-mail wysyłanych do klienta.'
+        existing_customer: 'Istniejący klient'
+        search_customer: 'Szukaj po e-mailu lub nazwisku'
+        product: Produkt
+        search_product: 'Szukaj po nazwie lub kodzie'
+        custom_unit_price: 'Indywidualna cena jednostkowa'
+        discount_amount: Kwota
+        discount_amount_help: 'Rozłożona na produkty jak promocja zamówienia. 0 usuwa rabat.'
+        discount_reason: Powód
+        discount_reason_help: 'Wewnętrzny, niewidoczny dla klienta.'
+        coupon_help: 'Pozostaw puste, aby usunąć kupon.'
+        different_shipping_address: 'Inny adres dostawy'
+        shipment_method: 'Metoda dostawy (przesyłka %number%)'
+        notes: Uwagi
+        notes_help: 'Uwagi do zamówienia, widoczne dla klienta.'
+        send_confirmation_email: 'Wyślij klientowi e-mail z potwierdzeniem zamówienia'
+        send_payment_link: 'Wyślij e-mail z linkiem do płatności'
+        send_payment_link_help: 'Klient płaci na stronie zamówienia w sklepie.'
+    email:
+        payment_link:
+            subject: 'Płatność za zamówienie %number%'
+            intro: 'Złożono dla Ciebie zamówienie:'
+            amount: 'Kwota do zapłaty: %amount%'
+            pay: 'Zapłać za zamówienie'
+            thank_you: Dziękujemy!

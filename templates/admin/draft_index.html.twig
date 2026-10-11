@@ -1,0 +1,16 @@
+{% extends '@TmonierSyliusAdminOrderCreationPlugin/admin/page/layout.html.twig' %}
+
+{% set page_title = 'tmonier_admin_order.ui.draft_orders' %}
+{% set page_context = {
+    drafts,
+    title: 'tmonier_admin_order.ui.draft_orders',
+    icon: 'tabler:file-pencil',
+    subtitle: 'tmonier_admin_order.ui.draft_orders_subtitle'|trans,
+    body_template: '@TmonierSyliusAdminOrderCreationPlugin/admin/draft_index/body.html.twig',
+    actions_template: '@TmonierSyliusAdminOrderCreationPlugin/admin/order/index/create_button.html.twig',
+    breadcrumbs: [
+        { name: 'sylius.ui.dashboard', url: path('sylius_admin_dashboard'), active: false },
+        { name: 'sylius.ui.orders', url: path('sylius_admin_order_index'), active: false },
+        { name: 'tmonier_admin_order.ui.draft_orders', active: true },
+    ],
+} %}

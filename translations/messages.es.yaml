@@ -1,0 +1,74 @@
+tmonier_admin_order:
+    ui:
+        new_order: 'Nuevo pedido'
+        new_order_subtitle: 'Pedido telefónico o de back-office en nombre de un cliente'
+        draft_orders: 'Pedidos en borrador'
+        draft_orders_subtitle: 'Pedidos preparados en el back-office, aún no realizados'
+        channel_and_language: 'Canal e idioma'
+        or_new_customer: 'o un cliente nuevo'
+        new_customer_help: 'Se crea un cliente invitado con este e-mail, salvo que ya lo use un cliente.'
+        start: 'Empezar el pedido'
+        no_drafts: 'No hay ningún pedido en borrador.'
+        created_by: 'Creado por'
+        last_modified: 'Última modificación'
+        continue: Continuar
+        delete_draft: 'Eliminar borrador'
+        delete_draft_confirm: '¿Eliminar este pedido en borrador?'
+        create_order: 'Crear pedido'
+        reorder: 'Volver a pedir'
+        created_by_admin: 'Back-office, por %name%'
+        deleted_admin: 'un administrador eliminado'
+        reorder_of: 'Nuevo pedido de'
+        manual_discount: 'Descuento manual'
+        manual_discount_label: Descuento
+        payment_link_sent_at: 'Enlace de pago enviado el %date%'
+        new_order_for: 'Nuevo pedido para %customer%'
+        step:
+            items: Artículos
+            address: Direcciones
+            shipping_payment: 'Envío y pago'
+            summary: Resumen
+        has_account: 'Cuenta de la tienda'
+        guest: Invitado
+        no_items: 'Aún no hay artículos: busque un producto abajo.'
+        custom_price: 'Precio personalizado'
+        items_help: 'Ponga una cantidad de 0 para quitar un artículo.'
+        update_items: 'Actualizar artículos'
+        add_product: 'Añadir un producto'
+        add: Añadir
+        apply_coupon: Aplicar
+        apply_discount: Aplicar
+        next_step: 'Siguiente: %step%'
+        address_book: 'Libreta de direcciones'
+        use_address: 'Usar esta dirección'
+        shipping_address_help: 'Solo se usa si «Dirección de envío diferente» está marcada.'
+        cannot_complete: 'El pedido aún no se puede realizar'
+        place_order: 'Realizar el pedido'
+    form:
+        locale: Idioma
+        locale_placeholder: 'Idioma por defecto del canal'
+        locale_help: 'Idioma de los e-mails enviados al cliente.'
+        existing_customer: 'Cliente existente'
+        search_customer: 'Buscar por e-mail o nombre'
+        product: Producto
+        search_product: 'Buscar por nombre o código'
+        custom_unit_price: 'Precio unitario personalizado'
+        discount_amount: Importe
+        discount_amount_help: 'Se reparte entre los artículos como una promoción de pedido. 0 elimina el descuento.'
+        discount_reason: Motivo
+        discount_reason_help: 'Interno, no visible para el cliente.'
+        coupon_help: 'Déjelo vacío para quitar el cupón.'
+        different_shipping_address: 'Dirección de envío diferente'
+        shipment_method: 'Método de envío (envío %number%)'
+        notes: Notas
+        notes_help: 'Notas del pedido, visibles para el cliente.'
+        send_confirmation_email: 'Enviar el e-mail de confirmación del pedido al cliente'
+        send_payment_link: 'Enviar un e-mail con un enlace de pago'
+        send_payment_link_help: 'El cliente paga desde la página del pedido en la tienda.'
+    email:
+        payment_link:
+            subject: 'Pago de su pedido %number%'
+            intro: 'Se ha realizado un pedido para usted:'
+            amount: 'Importe a pagar: %amount%'
+            pay: 'Pagar mi pedido'
+            thank_you: ¡Gracias!

@@ -1,0 +1,74 @@
+tmonier_admin_order:
+    ui:
+        new_order: 'Neue Bestellung'
+        new_order_subtitle: 'Telefon- oder Backoffice-Bestellung im Namen eines Kunden'
+        draft_orders: Bestellentwürfe
+        draft_orders_subtitle: 'Im Backoffice vorbereitete, noch nicht aufgegebene Bestellungen'
+        channel_and_language: 'Kanal und Sprache'
+        or_new_customer: 'oder ein neuer Kunde'
+        new_customer_help: 'Mit dieser E-Mail wird ein Gastkunde angelegt, sofern sie nicht schon von einem Kunden verwendet wird.'
+        start: 'Bestellung beginnen'
+        no_drafts: 'Es gibt keinen Bestellentwurf.'
+        created_by: 'Erstellt von'
+        last_modified: 'Zuletzt geändert'
+        continue: Fortfahren
+        delete_draft: 'Entwurf löschen'
+        delete_draft_confirm: 'Diesen Bestellentwurf löschen?'
+        create_order: 'Bestellung anlegen'
+        reorder: 'Erneut bestellen'
+        created_by_admin: 'Backoffice, von %name%'
+        deleted_admin: 'einem gelöschten Administrator'
+        reorder_of: 'Erneute Bestellung von'
+        manual_discount: 'Manueller Rabatt'
+        manual_discount_label: Rabatt
+        payment_link_sent_at: 'Zahlungslink gesendet am %date%'
+        new_order_for: 'Neue Bestellung für %customer%'
+        step:
+            items: Artikel
+            address: Adressen
+            shipping_payment: 'Versand und Zahlung'
+            summary: Zusammenfassung
+        has_account: Shop-Konto
+        guest: Gast
+        no_items: 'Noch kein Artikel: Suchen Sie unten nach einem Produkt.'
+        custom_price: 'Individueller Preis'
+        items_help: 'Setzen Sie die Menge auf 0, um einen Artikel zu entfernen.'
+        update_items: 'Artikel aktualisieren'
+        add_product: 'Produkt hinzufügen'
+        add: Hinzufügen
+        apply_coupon: Anwenden
+        apply_discount: Anwenden
+        next_step: 'Weiter: %step%'
+        address_book: Adressbuch
+        use_address: 'Diese Adresse verwenden'
+        shipping_address_help: 'Wird nur verwendet, wenn „Abweichende Lieferadresse“ aktiviert ist.'
+        cannot_complete: 'Die Bestellung kann noch nicht aufgegeben werden'
+        place_order: 'Bestellung aufgeben'
+    form:
+        locale: Sprache
+        locale_placeholder: 'Standardsprache des Kanals'
+        locale_help: 'Sprache der an den Kunden gesendeten E-Mails.'
+        existing_customer: 'Bestehender Kunde'
+        search_customer: 'Nach E-Mail oder Name suchen'
+        product: Produkt
+        search_product: 'Nach Name oder Code suchen'
+        custom_unit_price: 'Individueller Stückpreis'
+        discount_amount: Betrag
+        discount_amount_help: 'Wird wie eine Bestellaktion auf die Artikel verteilt. 0 entfernt den Rabatt.'
+        discount_reason: Grund
+        discount_reason_help: 'Intern, für den Kunden nicht sichtbar.'
+        coupon_help: 'Leer lassen, um den Gutschein zu entfernen.'
+        different_shipping_address: 'Abweichende Lieferadresse'
+        shipment_method: 'Versandart (Sendung %number%)'
+        notes: Notizen
+        notes_help: 'Bestellnotizen, für den Kunden sichtbar.'
+        send_confirmation_email: 'Bestellbestätigung per E-Mail an den Kunden senden'
+        send_payment_link: 'E-Mail mit Zahlungslink senden'
+        send_payment_link_help: 'Der Kunde bezahlt über die Bestellseite des Shops.'
+    email:
+        payment_link:
+            subject: 'Zahlung Ihrer Bestellung %number%'
+            intro: 'Für Sie wurde eine Bestellung aufgegeben:'
+            amount: 'Zu zahlender Betrag: %amount%'
+            pay: 'Meine Bestellung bezahlen'
+            thank_you: 'Vielen Dank!'

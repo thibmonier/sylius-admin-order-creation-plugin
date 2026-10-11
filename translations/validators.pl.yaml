@@ -1,0 +1,16 @@
+tmonier_admin_order:
+    channel:
+        not_blank: 'Wybierz kanał.'
+    customer:
+        required: 'Wybierz istniejącego klienta lub wpisz e-mail nowego klienta.'
+        ambiguous: 'Wybierz istniejącego klienta lub wpisz nowy e-mail, nie oba naraz.'
+    locale:
+        not_in_channel: 'Ten język nie jest dostępny w wybranym kanale.'
+    item:
+        variant_required: 'Wybierz produkt.'
+    discount:
+        reason_required: 'Podaj powód rabatu.'
+    shipping_method:
+        required: 'Wybierz metodę dostawy.'
+    payment_method:
+        required: 'Wybierz metodę płatności.'

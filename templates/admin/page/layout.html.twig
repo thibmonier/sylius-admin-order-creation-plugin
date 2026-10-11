@@ -1,0 +1,7 @@
+{% extends '@SyliusAdmin/shared/layout/base.html.twig' %}
+
+{% block title %}{{ page_title|trans(page_title_parameters|default({})) }} | {{ parent() }}{% endblock %}
+
+{% block body %}
+    {% hook 'tmonier_admin_order.admin.page' with page_context %}
+{% endblock %}

@@ -1,0 +1,74 @@
+tmonier_admin_order:
+    ui:
+        new_order: 'Nieuwe bestelling'
+        new_order_subtitle: 'Telefonische of backoffice-bestelling namens een klant'
+        draft_orders: Conceptbestellingen
+        draft_orders_subtitle: 'Bestellingen die in de backoffice worden voorbereid, nog niet geplaatst'
+        channel_and_language: 'Kanaal en taal'
+        or_new_customer: 'of een nieuwe klant'
+        new_customer_help: 'Er wordt een gastklant met dit e-mailadres aangemaakt, tenzij een klant het al gebruikt.'
+        start: 'Bestelling starten'
+        no_drafts: 'Er is geen conceptbestelling.'
+        created_by: 'Aangemaakt door'
+        last_modified: 'Laatst gewijzigd'
+        continue: Doorgaan
+        delete_draft: 'Concept verwijderen'
+        delete_draft_confirm: 'Deze conceptbestelling verwijderen?'
+        create_order: 'Bestelling aanmaken'
+        reorder: 'Opnieuw bestellen'
+        created_by_admin: 'Backoffice, door %name%'
+        deleted_admin: 'een verwijderde beheerder'
+        reorder_of: 'Nabestelling van'
+        manual_discount: 'Handmatige korting'
+        manual_discount_label: Korting
+        payment_link_sent_at: 'Betaallink verzonden op %date%'
+        new_order_for: 'Nieuwe bestelling voor %customer%'
+        step:
+            items: Artikelen
+            address: Adressen
+            shipping_payment: 'Verzending en betaling'
+            summary: Overzicht
+        has_account: Winkelaccount
+        guest: Gast
+        no_items: 'Nog geen artikelen: zoek hieronder een product.'
+        custom_price: 'Aangepaste prijs'
+        items_help: 'Zet het aantal op 0 om een artikel te verwijderen.'
+        update_items: 'Artikelen bijwerken'
+        add_product: 'Product toevoegen'
+        add: Toevoegen
+        apply_coupon: Toepassen
+        apply_discount: Toepassen
+        next_step: 'Volgende: %step%'
+        address_book: Adresboek
+        use_address: 'Dit adres gebruiken'
+        shipping_address_help: 'Alleen gebruikt als „Ander verzendadres” is aangevinkt.'
+        cannot_complete: 'De bestelling kan nog niet worden geplaatst'
+        place_order: 'Bestelling plaatsen'
+    form:
+        locale: Taal
+        locale_placeholder: 'Standaardtaal van het kanaal'
+        locale_help: 'Taal van de e-mails aan de klant.'
+        existing_customer: 'Bestaande klant'
+        search_customer: 'Zoeken op e-mail of naam'
+        product: Product
+        search_product: 'Zoeken op naam of code'
+        custom_unit_price: 'Aangepaste stukprijs'
+        discount_amount: Bedrag
+        discount_amount_help: 'Verdeeld over de artikelen zoals een bestellingspromotie. 0 verwijdert de korting.'
+        discount_reason: Reden
+        discount_reason_help: 'Intern, niet zichtbaar voor de klant.'
+        coupon_help: 'Leeg laten om de coupon te verwijderen.'
+        different_shipping_address: 'Ander verzendadres'
+        shipment_method: 'Verzendmethode (zending %number%)'
+        notes: Notities
+        notes_help: 'Notities bij de bestelling, zichtbaar voor de klant.'
+        send_confirmation_email: 'De orderbevestiging per e-mail naar de klant sturen'
+        send_payment_link: 'Een e-mail met betaallink sturen'
+        send_payment_link_help: 'De klant betaalt via de bestelpagina van de winkel.'
+    email:
+        payment_link:
+            subject: 'Betaling van uw bestelling %number%'
+            intro: 'Er is een bestelling voor u geplaatst:'
+            amount: 'Te betalen bedrag: %amount%'
+            pay: 'Mijn bestelling betalen'
+            thank_you: Bedankt!

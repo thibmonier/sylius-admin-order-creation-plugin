@@ -1,0 +1,7 @@
+{% set actions_template = hookable_metadata.context.actions_template|default(null) %}
+
+<div class="col-12 col-md-6 d-flex justify-content-md-end align-items-center gap-2">
+    {% if actions_template is not null %}
+        {% include actions_template %}
+    {% endif %}
+</div>

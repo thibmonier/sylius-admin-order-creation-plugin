@@ -1,0 +1,62 @@
+sylius_twig_hooks:
+    hooks:
+        # "Create order" on the order list and on the customer page, "Reorder" on the order page.
+        'sylius_admin.order.index.content.header.title_block.actions':
+            tmonier_admin_order_create:
+                template: '@TmonierSyliusAdminOrderCreationPlugin/admin/order/index/create_button.html.twig'
+                priority: 100
+
+        'sylius_admin.customer.show.content.header.title_block.actions':
+            tmonier_admin_order_create:
+                template: '@TmonierSyliusAdminOrderCreationPlugin/admin/customer/show/create_order.html.twig'
+                priority: 250
+
+        'sylius_admin.order.show.content.header.title_block.actions.list':
+            tmonier_admin_order_reorder:
+                template: '@TmonierSyliusAdminOrderCreationPlugin/admin/order/show/reorder.html.twig'
+                priority: 50
+
+        # "Created by" in the details card of the order page.
+        'sylius_admin.order.show.content.sections.general':
+            tmonier_admin_order_created_by:
+                template: '@TmonierSyliusAdminOrderCreationPlugin/admin/order/show/created_by.html.twig'
+                priority: 150
+
+        # Plugin pages (start, drafts list, draft steps).
+        'tmonier_admin_order.admin.page':
+            sidebar:
+                template: '@SyliusAdmin/shared/crud/common/sidebar.html.twig'
+                priority: 200
+            navbar:
+                template: '@SyliusAdmin/shared/crud/common/navbar.html.twig'
+                priority: 100
+            content:
+                template: '@SyliusAdmin/shared/crud/common/content.html.twig'
+                priority: 0
+
+        'tmonier_admin_order.admin.page.content':
+            flashes:
+                template: '@SyliusAdmin/shared/crud/common/content/flashes.html.twig'
+                priority: 200
+            header:
+                template: '@SyliusAdmin/shared/crud/common/content/header.html.twig'
+                priority: 100
+            body:
+                template: '@TmonierSyliusAdminOrderCreationPlugin/admin/page/body.html.twig'
+                priority: 0
+
+        'tmonier_admin_order.admin.page.content.header':
+            breadcrumbs:
+                template: '@TmonierSyliusAdminOrderCreationPlugin/admin/page/breadcrumbs.html.twig'
+                priority: 100
+            title_block:
+                template: '@SyliusAdmin/shared/crud/common/content/header/title_block.html.twig'
+                priority: 0
+
+        'tmonier_admin_order.admin.page.content.header.title_block':
+            title:
+                template: '@TmonierSyliusAdminOrderCreationPlugin/admin/page/title.html.twig'
+                priority: 100
+            actions:
+                template: '@TmonierSyliusAdminOrderCreationPlugin/admin/page/actions.html.twig'
+                priority: 0

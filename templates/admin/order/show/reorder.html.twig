@@ -1,0 +1,11 @@
+{% set order = hookable_metadata.context.resource %}
+
+{% if tmonier_admin_order_can_reorder(order) %}
+    <form action="{{ path('tmonier_admin_order_reorder', {'id': order.id}) }}" method="post" data-test-reorder-form>
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('tmonier_admin_order_reorder_' ~ order.id) }}">
+        <button type="submit" class="dropdown-item" data-test-reorder>
+            {{ ux_icon('tabler:copy', {'class': 'icon dropdown-item-icon'}) }}
+            {{ 'tmonier_admin_order.ui.reorder'|trans }}
+        </button>
+    </form>
+{% endif %}

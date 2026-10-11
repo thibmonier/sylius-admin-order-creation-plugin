@@ -1,0 +1,7 @@
+{% import '@SyliusAdmin/shared/helper/header.html.twig' as header %}
+
+{% set context = hookable_metadata.context %}
+
+<div class="col-12 col-md-6">
+    {{ header.h1(context.title|trans(context.title_parameters|default({})), context.icon|default('tabler:shopping-cart-plus'), context.subtitle|default(null)) }}
+</div>

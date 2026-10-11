@@ -1,0 +1,74 @@
+tmonier_admin_order:
+    ui:
+        new_order: 'Nouvelle commande'
+        new_order_subtitle: "Commande par téléphone ou en back-office pour le compte d'un client"
+        draft_orders: 'Commandes en préparation'
+        draft_orders_subtitle: 'Commandes préparées en back-office, pas encore passées'
+        channel_and_language: 'Canal et langue'
+        or_new_customer: 'ou un nouveau client'
+        new_customer_help: "Un client invité est créé avec cet e-mail, sauf si un client l'utilise déjà."
+        start: 'Commencer la commande'
+        no_drafts: 'Aucune commande en préparation.'
+        created_by: 'Créée par'
+        last_modified: 'Dernière modification'
+        continue: Continuer
+        delete_draft: 'Supprimer le brouillon'
+        delete_draft_confirm: 'Supprimer cette commande en préparation ?'
+        create_order: 'Créer une commande'
+        reorder: 'Commander à nouveau'
+        created_by_admin: 'Back-office, par %name%'
+        deleted_admin: 'un administrateur supprimé'
+        reorder_of: 'Nouvelle commande de'
+        manual_discount: 'Remise manuelle'
+        manual_discount_label: Remise
+        payment_link_sent_at: 'Lien de paiement envoyé le %date%'
+        new_order_for: 'Nouvelle commande pour %customer%'
+        step:
+            items: Articles
+            address: Adresses
+            shipping_payment: 'Livraison et paiement'
+            summary: Récapitulatif
+        has_account: 'Compte boutique'
+        guest: Invité
+        no_items: 'Aucun article : recherchez un produit ci-dessous.'
+        custom_price: 'Prix personnalisé'
+        items_help: 'Mettez une quantité à 0 pour retirer un article.'
+        update_items: 'Mettre à jour les articles'
+        add_product: 'Ajouter un produit'
+        add: Ajouter
+        apply_coupon: Appliquer
+        apply_discount: Appliquer
+        next_step: 'Suivant : %step%'
+        address_book: "Carnet d'adresses"
+        use_address: 'Utiliser cette adresse'
+        shipping_address_help: 'Utilisée uniquement si « Adresse de livraison différente » est cochée.'
+        cannot_complete: 'La commande ne peut pas encore être passée'
+        place_order: 'Passer la commande'
+    form:
+        locale: Langue
+        locale_placeholder: 'Langue par défaut du canal'
+        locale_help: 'Langue des e-mails envoyés au client.'
+        existing_customer: 'Client existant'
+        search_customer: 'Rechercher par e-mail ou nom'
+        product: Produit
+        search_product: 'Rechercher par nom ou code'
+        custom_unit_price: 'Prix unitaire personnalisé'
+        discount_amount: Montant
+        discount_amount_help: 'Réparti sur les articles comme une promotion de commande. 0 supprime la remise.'
+        discount_reason: Motif
+        discount_reason_help: 'Interne, non visible par le client.'
+        coupon_help: 'Laisser vide pour retirer le coupon.'
+        different_shipping_address: 'Adresse de livraison différente'
+        shipment_method: 'Mode de livraison (envoi %number%)'
+        notes: Notes
+        notes_help: 'Notes de la commande, visibles par le client.'
+        send_confirmation_email: "Envoyer l'e-mail de confirmation de commande au client"
+        send_payment_link: 'Envoyer un e-mail avec un lien de paiement'
+        send_payment_link_help: 'Le client paie depuis la page de la commande sur la boutique.'
+    email:
+        payment_link:
+            subject: 'Paiement de votre commande %number%'
+            intro: 'Une commande a été passée pour vous :'
+            amount: 'Montant à payer : %amount%'
+            pay: 'Payer ma commande'
+            thank_you: 'Merci !'

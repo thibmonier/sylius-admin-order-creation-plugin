@@ -1,0 +1,4 @@
+<a class="dropdown-item" href="{{ path('tmonier_admin_order_draft_start', {'customerId': hookable_metadata.context.resource.id}) }}" data-test-create-order-for-customer>
+    {{ ux_icon('tabler:shopping-cart-plus', {'class': 'icon dropdown-item-icon'}) }}
+    {{ 'tmonier_admin_order.ui.create_order'|trans }}
+</a>

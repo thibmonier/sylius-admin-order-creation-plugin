@@ -1,0 +1,34 @@
+{% set order = hookable_metadata.context.resource %}
+{% set creation = tmonier_admin_order_creation(order) %}
+
+{% if creation is not null %}
+    {% set discount = tmonier_admin_order_manual_discount(order) %}
+    <div data-test-admin-order-creation>
+        <div class="mb-1">
+            <strong>{{ 'tmonier_admin_order.ui.created_by'|trans }}:</strong>
+        </div>
+        <div class="mb-3">
+            <span class="badge bg-azure-lt" data-test-created-by>
+                {{ ux_icon('tabler:headset', {'class': 'icon'}) }}
+                {{ 'tmonier_admin_order.ui.created_by_admin'|trans({'%name%': creation.adminName|default('tmonier_admin_order.ui.deleted_admin'|trans)}) }}
+            </span>
+            {% if creation.sourceOrder is not null %}
+                <div class="mt-1 text-secondary" data-test-reorder-of>
+                    {{ 'tmonier_admin_order.ui.reorder_of'|trans }}
+                    <a href="{{ path('sylius_admin_order_show', {'id': creation.sourceOrder.id}) }}">#{{ creation.sourceOrder.number }}</a>
+                </div>
+            {% endif %}
+            {% if discount is not null %}
+                {% import '@SyliusAdmin/shared/helper/money.html.twig' as money %}
+                <div class="mt-1 text-secondary" data-test-manual-discount-reason>
+                    {{ 'tmonier_admin_order.ui.manual_discount'|trans }}: {{ money.format(discount.amount, order.currencyCode) }} ({{ discount.reason }})
+                </div>
+            {% endif %}
+            {% if creation.paymentLinkSentAt is not null %}
+                <div class="mt-1 text-secondary" data-test-payment-link-sent>
+                    {{ 'tmonier_admin_order.ui.payment_link_sent_at'|trans({'%date%': creation.paymentLinkSentAt|format_datetime('medium', 'short')}) }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}

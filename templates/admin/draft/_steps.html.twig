@@ -1,0 +1,18 @@
+{% set steps = {
+    items: { route: 'tmonier_admin_order_draft_items', enabled: true },
+    address: { route: 'tmonier_admin_order_draft_address', enabled: order.items is not empty },
+    shipping_payment: { route: 'tmonier_admin_order_draft_shipping_payment', enabled: order.checkoutState != 'cart' },
+    summary: { route: 'tmonier_admin_order_draft_summary', enabled: order.checkoutState in ['payment_selected', 'payment_skipped'] },
+} %}
+
+<ul class="steps steps-counter mb-4" data-test-draft-steps>
+    {% for name, step in steps %}
+        <li class="step-item{{ name == ctx.step ? ' active' }}">
+            {% if step.enabled and name != ctx.step %}
+                <a href="{{ path(step.route, {'id': order.id}) }}">{{ ('tmonier_admin_order.ui.step.' ~ name)|trans }}</a>
+            {% else %}
+                {{ ('tmonier_admin_order.ui.step.' ~ name)|trans }}
+            {% endif %}
+        </li>
+    {% endfor %}
+</ul>
