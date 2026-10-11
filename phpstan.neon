@@ -13,6 +13,7 @@ parameters:
 
         # Test dependencies
         - 'tests/TestApplication/src/**.php'
+        - 'tests/Integration/Resources/*.php'
 
     ignoreErrors:
         - '/Parameter #1 \$configuration of method Symfony\\Component\\DependencyInjection\\Extension\\Extension::processConfiguration\(\) expects Symfony\\Component\\Config\\Definition\\ConfigurationInterface, Symfony\\Component\\Config\\Definition\\ConfigurationInterface\|null given\./'

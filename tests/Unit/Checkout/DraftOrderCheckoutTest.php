@@ -181,7 +181,9 @@ final class DraftOrderCheckoutTest extends TestCase
         $this->eventDispatcher->method('dispatch')->willThrowException(new \RuntimeException('ERP down'));
         $this->logger->expects(self::once())->method('error');
 
-        self::assertTrue($this->checkout->complete($this->creation(), false, false)->isPlaced());
+        $result = $this->checkout->complete($this->creation(), false, false);
+        self::assertTrue($result->isPlaced());
+        self::assertTrue($result->postCompletionError);
     }
 
     public function testAFailureAfterTheCommitDoesNotTurnAPlacedOrderIntoAnError(): void
@@ -199,6 +201,7 @@ final class DraftOrderCheckoutTest extends TestCase
         $result = $this->checkout->complete($creation, false, false);
 
         self::assertTrue($result->isPlaced());
+        self::assertTrue($result->postCompletionError, 'The admin is warned.');
         self::assertNotNull($creation->getCompletedAt());
     }
 
@@ -217,6 +220,15 @@ final class DraftOrderCheckoutTest extends TestCase
         $this->checkout->complete($this->creation(), false, false);
 
         self::assertSame(['lock', 'check'], $calls);
+    }
+
+    public function testAConcurrentChangeDetectedByTheOptimisticLockSendsTheAdminBackToTheSummary(): void
+    {
+        $this->entityManager->method('flush')->willThrowException(new \Doctrine\ORM\OptimisticLockException('The optimistic lock failed.', null));
+        $this->connection->expects(self::once())->method('rollBack');
+        $this->eventDispatcher->expects(self::never())->method('dispatch');
+
+        self::assertSame(CompletionResult::CHANGED, $this->checkout->complete($this->creation(), true, false)->status);
     }
 
     public function testAnEmptyOrderIsNotReady(): void

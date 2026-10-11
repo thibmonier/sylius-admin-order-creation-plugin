@@ -60,6 +60,43 @@ final class ReviewRegressionTest extends WebTestCase
         self::assertResponseRedirects(sprintf('/admin/order-drafts/%d/shipping-payment', $orderId));
     }
 
+    public function testARequestThatChangesNothingKeepsTheChosenMethods(): void
+    {
+        $this->loginAdmin();
+        $orderId = $this->prepareDraftReadyToComplete('noop@example.com');
+
+        $this->client->request('GET', sprintf('/admin/order-drafts/%d/items', $orderId));
+        $this->client->submitForm('Update items');
+        self::assertSame(OrderCheckoutStates::STATE_PAYMENT_SELECTED, $this->reloadOrder($orderId)->getCheckoutState());
+
+        $this->client->request('GET', sprintf('/admin/order-drafts/%d/items', $orderId));
+        $this->client->submitForm('Apply coupon', ['tmonier_admin_order_coupon[code]' => 'DOES_NOT_EXIST'], 'POST');
+        self::assertSame(OrderCheckoutStates::STATE_PAYMENT_SELECTED, $this->reloadOrder($orderId)->getCheckoutState(), 'A rejected coupon changes nothing.');
+
+        $this->client->request('GET', sprintf('/admin/order-drafts/%d/summary', $orderId));
+        self::assertResponseIsSuccessful();
+    }
+
+    public function testAnAdministratorIsWarnedWhenSomethingFailsAfterThePlacement(): void
+    {
+        $this->loginAdmin();
+        $orderId = $this->prepareDraftReadyToComplete('listener.failure@example.com');
+        /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher */
+        $dispatcher = self::getContainer()->get('event_dispatcher');
+        $dispatcher->addListener('tmonier_admin_order.order_created', static function (): void {
+            throw new \RuntimeException('ERP unreachable');
+        });
+
+        $this->client->request('GET', sprintf('/admin/order-drafts/%d/summary', $orderId));
+        $this->client->submitForm('Place order', ['tmonier_admin_order_complete[sendConfirmationEmail]' => false]);
+
+        self::assertResponseRedirects(sprintf('/admin/orders/%d', $orderId));
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('[data-test-sylius-flash-message-type="success"]', 'has been placed');
+        self::assertSelectorTextContains('[data-test-sylius-flash-message-type="warning"]', 'an error occurred afterwards');
+        self::assertSame(OrderInterface::STATE_NEW, $this->reloadOrder($orderId)->getState());
+    }
+
     public function testAPriceChangedSinceTheSummaryStopsThePlacement(): void
     {
         $this->loginAdmin();

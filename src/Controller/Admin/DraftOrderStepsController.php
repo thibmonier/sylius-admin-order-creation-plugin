@@ -390,6 +390,9 @@ final class DraftOrderStepsController extends AbstractController
             if ($result->emailFailed) {
                 $this->addFlash('warning', 'tmonier_admin_order.email_failed');
             }
+            if ($result->postCompletionError) {
+                $this->addFlash('warning', 'tmonier_admin_order.placed_with_errors');
+            }
 
             return $this->redirectToRoute('sylius_admin_order_show', ['id' => $order->getId()]);
         }

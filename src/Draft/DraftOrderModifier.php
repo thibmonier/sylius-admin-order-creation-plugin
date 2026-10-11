@@ -48,18 +48,20 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
     {
         $this->assertDraft($order);
         Assert::greaterThan($quantity, 0);
+        $before = $this->fingerprint($order);
 
         $item = $this->orderItemFactory->createNew();
         $item->setVariant($variant);
         $this->quantityModifier->modify($item, $quantity);
 
         $this->orderModifier->addToOrder($order, $item);
-        $this->invalidateCheckout($order);
+        $this->invalidateCheckoutIfChanged($order, $before);
     }
 
     public function updateItems(OrderInterface $order, array $changes): void
     {
         $this->assertDraft($order);
+        $before = $this->fingerprint($order);
 
         foreach ($order->getItems()->toArray() as $item) {
             $itemId = $item->getId();
@@ -80,24 +82,26 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
             }
         }
 
-        $this->process($order);
+        $this->process($order, $before);
     }
 
     public function removeItem(OrderInterface $order, OrderItemInterface $item): void
     {
         $this->assertDraft($order);
+        $before = $this->fingerprint($order);
 
         $this->orderModifier->removeFromOrder($order, $item);
-        $this->invalidateCheckout($order);
+        $this->invalidateCheckoutIfChanged($order, $before);
     }
 
     public function overrideUnitPrice(OrderInterface $order, OrderItemInterface $item, ?int $unitPrice): void
     {
         $this->assertDraft($order);
         Assert::true($order->hasItem($item));
+        $before = $this->fingerprint($order);
 
         $this->applyUnitPrice($item, $unitPrice);
-        $this->process($order);
+        $this->process($order, $before);
     }
 
     public function setManualDiscount(AdminOrderCreationInterface $draft, int $amount, string $reason): void
@@ -106,6 +110,7 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
         Assert::notNull($order);
         $this->assertDraft($order);
         Assert::greaterThanEq($amount, 0);
+        $before = $this->fingerprint($order);
 
         $order->removeAdjustments(ManualDiscount::REQUEST_ADJUSTMENT_TYPE);
         $draft->setManualDiscountReason(null);
@@ -122,7 +127,7 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
             $draft->setManualDiscountReason(mb_substr($reason, 0, ManualDiscount::REASON_MAX_LENGTH));
         }
 
-        $this->process($order);
+        $this->process($order, $before);
     }
 
     public function getManualDiscount(AdminOrderCreationInterface $draft): ?array
@@ -142,6 +147,7 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
             return false;
         }
 
+        $before = $this->fingerprint($order);
         $changed = false;
         if (!$this->manualDiscountAllowed && null !== $this->getManualDiscount($draft)) {
             $order->removeAdjustments(ManualDiscount::REQUEST_ADJUSTMENT_TYPE);
@@ -159,7 +165,7 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
         }
 
         if ($changed) {
-            $this->process($order);
+            $this->process($order, $before);
         }
 
         return $changed;
@@ -168,34 +174,33 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
     public function applyCoupon(OrderInterface $order, ?string $code): bool
     {
         $this->assertDraft($order);
+        $before = $this->fingerprint($order);
+        $previousCoupon = $order->getPromotionCoupon();
 
-        $order->setPromotionCoupon(null);
         $code = null !== $code ? trim($code) : '';
         if ('' === $code) {
-            $this->process($order);
+            $order->setPromotionCoupon(null);
+            $this->process($order, $before);
 
             return true;
         }
 
         $coupon = $this->couponRepository->findOneBy(['code' => $code]);
-        if (!$coupon instanceof PromotionCouponInterface || !$this->couponEligibilityChecker->isEligible($order, $coupon)) {
-            $this->process($order);
+        if ($coupon instanceof PromotionCouponInterface && $this->couponEligibilityChecker->isEligible($order, $coupon)) {
+            $order->setPromotionCoupon($coupon);
+            $this->orderProcessor->process($order);
 
-            return false;
+            $promotion = $coupon->getPromotion();
+            if (null !== $promotion && $order->getPromotions()->contains($promotion)) {
+                $this->invalidateCheckoutIfChanged($order, $before);
+
+                return true;
+            }
         }
 
-        $order->setPromotionCoupon($coupon);
-        $this->orderProcessor->process($order);
-
-        $promotion = $coupon->getPromotion();
-        if (null !== $promotion && $order->getPromotions()->contains($promotion)) {
-            $this->invalidateCheckout($order);
-
-            return true;
-        }
-
-        $order->setPromotionCoupon(null);
-        $this->process($order);
+        // Rejected: the draft keeps its previous coupon.
+        $order->setPromotionCoupon($previousCoupon);
+        $this->process($order, $before);
 
         return false;
     }
@@ -213,20 +218,43 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
         $item->setImmutable(true);
     }
 
-    private function process(OrderInterface $order): void
+    /** @param list<mixed> $before */
+    private function process(OrderInterface $order, array $before): void
     {
         $this->orderProcessor->process($order);
-        $this->invalidateCheckout($order);
+        $this->invalidateCheckoutIfChanged($order, $before);
+    }
+
+    /**
+     * What the shipping and payment selection depends on: items, prices, coupon, discounts, total.
+     *
+     * @return list<mixed>
+     */
+    private function fingerprint(OrderInterface $order): array
+    {
+        $items = [];
+        foreach ($order->getItems() as $item) {
+            $items[] = [$item->getVariant()?->getCode(), $item->getQuantity(), $item->getUnitPrice(), $item->isImmutable(), $item->getTotal()];
+        }
+
+        return [
+            $items,
+            $order->getPromotionCoupon()?->getCode(),
+            array_map(static fn ($adjustment): int => $adjustment->getAmount(), $order->getAdjustments(ManualDiscount::REQUEST_ADJUSTMENT_TYPE)->toArray()),
+            $order->getTotal(),
+        ];
     }
 
     /**
      * The shipping and payment selection depends on the content of the cart: once it changes,
      * the draft goes back to "addressed" (the core listeners recalculate it and skip the steps
-     * that are no longer needed).
+     * that are no longer needed). A request that changes nothing keeps the checkout state.
+     *
+     * @param list<mixed> $before
      */
-    private function invalidateCheckout(OrderInterface $order): void
+    private function invalidateCheckoutIfChanged(OrderInterface $order, array $before): void
     {
-        if (in_array($order->getCheckoutState(), [OrderCheckoutStates::STATE_CART, OrderCheckoutStates::STATE_ADDRESSED], true)) {
+        if ($before === $this->fingerprint($order) || in_array($order->getCheckoutState(), [OrderCheckoutStates::STATE_CART, OrderCheckoutStates::STATE_ADDRESSED], true)) {
             return;
         }
 

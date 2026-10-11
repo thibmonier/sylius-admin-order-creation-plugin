@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tmonier\SyliusAdminOrderCreationPlugin\Checkout;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\OptimisticLockException;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
@@ -116,6 +117,10 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
         Assert::notNull($order);
         Assert::true($this->isReadyToComplete($order), 'The order is not ready to be completed.');
 
+        // Load what the locks need before the transaction: inside it, nothing may be read before
+        // the locks (see OrderRowLock).
+        $order->getPromotions()->toArray();
+
         $connection = $this->entityManager->getConnection();
         $connection->beginTransaction();
 
@@ -141,6 +146,14 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
             $creation->setCompletedAt($this->clock->now());
             $this->entityManager->flush();
             $connection->commit();
+        } catch (OptimisticLockException $exception) {
+            // A promotion or coupon usage (or stock) changed concurrently: review and try again.
+            if ($connection->isTransactionActive()) {
+                $connection->rollBack();
+            }
+            $this->logger->warning(sprintf('Concurrent change while placing the draft order with the token "%s".', (string) $order->getTokenValue()), ['exception' => $exception]);
+
+            return CompletionResult::changed(null);
         } catch (\Throwable $exception) {
             if ($connection->isTransactionActive()) {
                 $connection->rollBack();
@@ -163,21 +176,25 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
         }
 
         // The order is placed and committed: from here on, failures are logged, never thrown.
+        $postCompletionError = false;
+
         try {
             $creation->setConfirmationEmailSent($confirmationSent);
             $creation->setPaymentLinkSentAt($paymentLinkSent ? $this->clock->now() : null);
             $this->entityManager->flush();
         } catch (\Throwable $exception) {
             $this->logger->error(sprintf('Unable to save the e-mail flags of the order "%s".', (string) $order->getNumber()), ['exception' => $exception]);
+            $postCompletionError = true;
         }
 
         try {
             $this->eventDispatcher->dispatch(new AdminOrderCreatedEvent($order, $creation), AdminOrderCreatedEvent::NAME);
         } catch (\Throwable $exception) {
             $this->logger->error(sprintf('A listener of "%s" failed for the order "%s".', AdminOrderCreatedEvent::NAME, (string) $order->getNumber()), ['exception' => $exception]);
+            $postCompletionError = true;
         }
 
-        return CompletionResult::placed($confirmationSent, $paymentLinkSent, $emailFailed);
+        return CompletionResult::placed($confirmationSent, $paymentLinkSent, $emailFailed, $postCompletionError);
     }
 
     /**

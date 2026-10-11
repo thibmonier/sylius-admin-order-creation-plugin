@@ -21,11 +21,11 @@ final class OrderRowLock implements OrderRowLockInterface
             return false;
         }
 
-        $this->entityManager->lock($order, LockMode::PESSIMISTIC_WRITE);
-
+        // A locking read: under REPEATABLE READ, the first plain read of the transaction fixes its
+        // snapshot, which must not predate the commits this transaction waits for on the locks.
         $tableName = $this->entityManager->getClassMetadata($order::class)->getTableName();
         $state = $this->entityManager->getConnection()->fetchOne(
-            sprintf('SELECT state FROM %s WHERE id = ?', $tableName),
+            sprintf('SELECT state FROM %s WHERE id = ? FOR UPDATE', $tableName),
             [$order->getId()],
         );
 
@@ -34,6 +34,7 @@ final class OrderRowLock implements OrderRowLockInterface
 
     public function lockPromotionUsages(OrderInterface $order): void
     {
+        // Locking reads only (refresh with a lock mode is a SELECT ... FOR UPDATE).
         $coupon = $order->getPromotionCoupon();
         $promotions = $order->getPromotions()->toArray();
         if (null !== $coupon) {
@@ -45,9 +46,7 @@ final class OrderRowLock implements OrderRowLockInterface
         }
 
         foreach ($promotions as $promotion) {
-            if (null !== $promotion->getUsageLimit()) {
-                $this->entityManager->refresh($promotion, LockMode::PESSIMISTIC_WRITE);
-            }
+            $this->entityManager->refresh($promotion, LockMode::PESSIMISTIC_WRITE);
         }
     }
 }

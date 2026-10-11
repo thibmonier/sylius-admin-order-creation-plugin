@@ -16,9 +16,10 @@ interface OrderRowLockInterface
     public function lockDraft(OrderInterface $order): bool;
 
     /**
-     * Must run inside a transaction. Locks and reloads the coupon of the order and the
-     * promotions with a usage limit, so that their usage counts are current while the order
-     * is recalculated and placed (two drafts sharing a single-use coupon).
+     * Must run inside a transaction, right after lockDraft(). Locks and reloads the coupon and
+     * the promotions of the order, so that their usage counts are current while the order is
+     * recalculated and placed (two drafts sharing a single-use coupon). The promotions
+     * collection must be loaded before the transaction starts.
      */
     public function lockPromotionUsages(OrderInterface $order): void;
 }

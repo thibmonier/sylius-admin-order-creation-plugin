@@ -20,12 +20,14 @@ final class CompletionResult
         public readonly bool $paymentLinkSent = false,
         public readonly bool $emailFailed = false,
         public readonly ?string $removedPromotion = null,
+        /** The order is placed, but saving the e-mail flags or a listener of the event failed (logged). */
+        public readonly bool $postCompletionError = false,
     ) {
     }
 
-    public static function placed(bool $confirmationEmailSent, bool $paymentLinkSent, bool $emailFailed): self
+    public static function placed(bool $confirmationEmailSent, bool $paymentLinkSent, bool $emailFailed, bool $postCompletionError = false): self
     {
-        return new self(self::PLACED, $confirmationEmailSent, $paymentLinkSent, $emailFailed);
+        return new self(self::PLACED, $confirmationEmailSent, $paymentLinkSent, $emailFailed, null, $postCompletionError);
     }
 
     public static function changed(?string $removedPromotion): self

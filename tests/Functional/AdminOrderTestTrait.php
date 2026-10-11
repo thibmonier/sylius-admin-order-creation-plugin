@@ -43,6 +43,11 @@ trait AdminOrderTestTrait
 
     private KernelBrowser $client;
 
+    /** @var array<int, array<string, mixed>> original stock columns of the variants changed by variant() */
+    private array $variantOriginals = [];
+
+    private bool $countryCreated = false;
+
     /** Codes of the deterministic test setup (the Sylius fixtures are random). */
     private const COUNTRY = 'IS';
 
@@ -69,9 +74,11 @@ trait AdminOrderTestTrait
      * and an offline payment method for the channel, a 10% tax excluded from prices, and no
      * fixture promotion running (their usage and dates are random).
      */
-    private function setUpWorld(): void
+    private function setUpWorld(bool $endFixturePromotions = true): void
     {
-        $this->connection()->executeStatement('UPDATE sylius_promotion SET ends_at = :past', ['past' => '2000-01-01 00:00:00']);
+        if ($endFixturePromotions) {
+            $this->connection()->executeStatement('UPDATE sylius_promotion SET ends_at = :past', ['past' => '2000-01-01 00:00:00']);
+        }
 
         $channel = $this->channel();
         $country = $this->entityManager()->getRepository(CountryInterface::class)->findOneBy(['code' => self::COUNTRY]);
@@ -81,6 +88,7 @@ trait AdminOrderTestTrait
             $country = $countryFactory->createNew();
             $country->setCode(self::COUNTRY);
             $this->entityManager()->persist($country);
+            $this->countryCreated = true;
         }
         $country->enable();
         if (!$channel->getCountries()->isEmpty()) {
@@ -209,6 +217,9 @@ trait AdminOrderTestTrait
         self::assertArrayHasKey($offset, $variants, 'The fixtures contain sellable variants.');
 
         $variant = $variants[$offset];
+        $original = $this->connection()->fetchAssociative('SELECT id, tax_category_id, tracked, on_hand, on_hold FROM sylius_product_variant WHERE id = ?', [$variant->getId()]);
+        self::assertIsArray($original);
+        $this->variantOriginals[$this->idOf($variant)] ??= $original;
         $variant->setTaxCategory($this->taxCategory());
         $variant->setTracked(true);
         $variant->setOnHand($onHand);
