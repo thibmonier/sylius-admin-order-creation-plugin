@@ -86,8 +86,9 @@ final class ManualDiscountProcessorTest extends TestCase
     public function testOtherPromotionsAreKept(): void
     {
         $order = OrderBuilder::cart([1000 => 1]);
-        $unit = $order->getItems()->first()?->getUnits()->first();
-        self::assertNotNull($unit);
+        $item = $order->getItems()->first();
+        self::assertNotFalse($item);
+        $unit = $item->getUnits()->first();
         self::assertNotFalse($unit);
         $promotion = OrderBuilder::adjustmentFactory()->createWithData(AdjustmentInterface::ORDER_PROMOTION_ADJUSTMENT, 'Promo', -100);
         $promotion->setOriginCode('SPRING');

@@ -9,9 +9,6 @@ use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\OrderInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
 
-/**
- * @extends EntityRepository<AdminOrderCreationInterface>
- */
 class AdminOrderCreationRepository extends EntityRepository implements AdminOrderCreationRepositoryInterface
 {
     public function findOneByOrder(OrderInterface $order): ?AdminOrderCreationInterface

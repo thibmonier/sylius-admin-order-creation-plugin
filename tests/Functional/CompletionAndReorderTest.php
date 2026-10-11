@@ -79,7 +79,9 @@ final class CompletionAndReorderTest extends WebTestCase
     {
         $admin = $this->loginAdmin();
         $orderId = $this->prepareDraftReadyToComplete('no.stock@example.com', $admin);
-        $variant = $this->reloadOrder($orderId)->getItems()->first()?->getVariant();
+        $item = $this->reloadOrder($orderId)->getItems()->first();
+        self::assertNotFalse($item);
+        $variant = $item->getVariant();
         self::assertNotNull($variant);
         $variant->setOnHand(1);
         $this->entityManager()->flush();
@@ -110,7 +112,7 @@ final class CompletionAndReorderTest extends WebTestCase
         $admin = $this->loginAdmin();
         $order = $this->placeAdminOrder($this->createCustomer('placed@example.com'), $admin);
 
-        $this->client->request('GET', sprintf('/admin/order-drafts/%d/items', (int) $order->getId()));
+        $this->client->request('GET', sprintf('/admin/order-drafts/%d/items', $this->idOf($order)));
         self::assertResponseStatusCodeSame(404);
     }
 
@@ -119,7 +121,7 @@ final class CompletionAndReorderTest extends WebTestCase
         $admin = $this->loginAdmin();
         $customer = $this->createCustomer('again@example.com', withAccount: true);
         $source = $this->placeAdminOrder($customer, $admin);
-        $sourceId = (int) $source->getId();
+        $sourceId = $this->idOf($source);
         $sourceNumber = (string) $source->getNumber();
         $sourceQuantities = [];
         foreach ($source->getItems() as $item) {
@@ -148,7 +150,7 @@ final class CompletionAndReorderTest extends WebTestCase
         }
         self::assertSame($sourceQuantities, $quantities);
         self::assertSame('1 Main Street', $draftOrder->getShippingAddress()?->getStreet());
-        self::assertNotSame($source->getShippingAddress()?->getId(), $draftOrder->getShippingAddress()?->getId(), 'Addresses are copied.');
+        self::assertNotSame($source->getShippingAddress()?->getId(), $draftOrder->getShippingAddress()->getId(), 'Addresses are copied.');
 
         $this->client->followRedirect();
         self::assertSelectorTextContains('[data-test-sylius-flash-message-type="success"]', 'A new draft has been created from this order.');
@@ -183,8 +185,10 @@ final class CompletionAndReorderTest extends WebTestCase
         $shipment = $order->getShipments()->first();
         self::assertNotFalse($shipment);
         $method = $shipment->getMethod();
-        self::assertNotNull($method);
-        $this->checkout()->selectShippingAndPayment($order, [0 => $method], $order->getLastPayment()?->getMethod());
+        self::assertInstanceOf(\Sylius\Component\Core\Model\ShippingMethodInterface::class, $method);
+        $paymentMethod = $order->getLastPayment()?->getMethod();
+        self::assertInstanceOf(\Sylius\Component\Core\Model\PaymentMethodInterface::class, $paymentMethod);
+        $this->checkout()->selectShippingAndPayment($order, [0 => $method], $paymentMethod);
         $this->entityManager()->flush();
         self::assertTrue($this->checkout()->isReadyToComplete($order));
 

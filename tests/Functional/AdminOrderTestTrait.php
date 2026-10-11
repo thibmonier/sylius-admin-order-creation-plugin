@@ -11,7 +11,10 @@ use Sylius\Component\Core\Model\AdminUserInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\OrderItemInterface;
+use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
+use Sylius\Component\Core\Model\ShippingMethodInterface;
 use Sylius\Component\Core\Model\ShopUserInterface;
 use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -191,9 +194,13 @@ trait AdminOrderTestTrait
 
         $shippingMethods = [];
         foreach (array_values($order->getShipments()->toArray()) as $index => $shipment) {
-            $shippingMethods[$index] = $shipment->getMethod();
+            $method = $shipment->getMethod();
+            self::assertInstanceOf(ShippingMethodInterface::class, $method);
+            $shippingMethods[$index] = $method;
         }
-        $this->checkout()->selectShippingAndPayment($order, array_filter($shippingMethods), $order->getLastPayment()?->getMethod());
+        $paymentMethod = $order->getLastPayment()?->getMethod();
+        self::assertInstanceOf(PaymentMethodInterface::class, $paymentMethod);
+        $this->checkout()->selectShippingAndPayment($order, $shippingMethods, $paymentMethod);
         $this->entityManager()->flush();
         $this->checkout()->complete($draft, $sendConfirmationEmail, false);
 
@@ -205,8 +212,10 @@ trait AdminOrderTestTrait
     {
         $form = $this->client->getCrawler()->selectButton('Add')->form();
         $form->disableValidation();
-        $form['tmonier_admin_order_add_item[variant]']->setValue((string) $variant->getId());
-        $form['tmonier_admin_order_add_item[quantity]']->setValue((string) $quantity);
+        $form->setValues([
+            'tmonier_admin_order_add_item[variant]' => (string) $this->idOf($variant),
+            'tmonier_admin_order_add_item[quantity]' => (string) $quantity,
+        ]);
         $this->client->submit($form);
     }
 
@@ -251,6 +260,14 @@ trait AdminOrderTestTrait
     private function orderIdOf(AdminOrderCreationInterface $creation): int
     {
         $id = $creation->getOrder()?->getId();
+        self::assertIsInt($id);
+
+        return $id;
+    }
+
+    private function idOf(OrderInterface|CustomerInterface|OrderItemInterface|ProductVariantInterface $resource): int
+    {
+        $id = $resource->getId();
         self::assertIsInt($id);
 
         return $id;

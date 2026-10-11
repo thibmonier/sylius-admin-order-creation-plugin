@@ -54,7 +54,8 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
         $this->assertDraft($order);
 
         foreach ($order->getItems()->toArray() as $item) {
-            $change = $changes[(int) $item->getId()] ?? null;
+            $itemId = $item->getId();
+            $change = is_int($itemId) ? ($changes[$itemId] ?? null) : null;
             if (null === $change) {
                 continue;
             }
@@ -67,7 +68,6 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
 
             $this->quantityModifier->modify($item, $change['quantity']);
             if (array_key_exists('unitPrice', $change)) {
-                Assert::isInstanceOf($item, OrderItemInterface::class);
                 $this->applyUnitPrice($item, $change['unitPrice']);
             }
         }

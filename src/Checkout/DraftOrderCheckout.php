@@ -6,7 +6,6 @@ namespace Tmonier\SyliusAdminOrderCreationPlugin\Checkout;
 
 use Doctrine\Persistence\ObjectManager;
 use Psr\Clock\ClockInterface;
-use Psr\EventDispatcher\EventDispatcherInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\CoreBundle\Mailer\OrderEmailManagerInterface;
@@ -17,6 +16,7 @@ use Sylius\Component\Core\OrderCheckoutStates;
 use Sylius\Component\Core\OrderCheckoutTransitions;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Event\AdminOrderCreatedEvent;
 use Tmonier\SyliusAdminOrderCreationPlugin\Mailer\PaymentLinkEmailManagerInterface;
@@ -79,8 +79,8 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
 
     public function isReadyToComplete(OrderInterface $order): bool
     {
-        return in_array($order->getCheckoutState(), [OrderCheckoutStates::STATE_PAYMENT_SELECTED, OrderCheckoutStates::STATE_PAYMENT_SKIPPED], true)
-            && $this->can($order, OrderCheckoutTransitions::TRANSITION_COMPLETE);
+        return in_array($order->getCheckoutState(), [OrderCheckoutStates::STATE_PAYMENT_SELECTED, OrderCheckoutStates::STATE_PAYMENT_SKIPPED], true) &&
+            $this->can($order, OrderCheckoutTransitions::TRANSITION_COMPLETE);
     }
 
     public function validate(OrderInterface $order): ConstraintViolationListInterface

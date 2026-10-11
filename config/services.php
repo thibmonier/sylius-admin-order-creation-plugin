@@ -162,7 +162,6 @@ return static function (ContainerConfigurator $container): void {
             service('sylius.registry.shipping_calculator'),
             service('sylius.formatter.money'),
             service('sylius.factory.address'),
-            service('tmonier_admin_order.mailer.payment_link'),
             service('sylius.manager.order'),
             param('tmonier_admin_order.send_confirmation_email_default'),
         ])

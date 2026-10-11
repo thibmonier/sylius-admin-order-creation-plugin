@@ -35,9 +35,9 @@ final class AdminOrderCreationFlowTest extends WebTestCase
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('a[data-test-create-order][href="/admin/order-drafts/new"]');
 
-        $this->client->request('GET', sprintf('/admin/customers/%d', (int) $customer->getId()));
+        $this->client->request('GET', sprintf('/admin/customers/%d', $this->idOf($customer)));
         self::assertResponseIsSuccessful();
-        self::assertSelectorExists(sprintf('a[data-test-create-order-for-customer][href="/admin/order-drafts/new?customerId=%d"]', (int) $customer->getId()));
+        self::assertSelectorExists(sprintf('a[data-test-create-order-for-customer][href="/admin/order-drafts/new?customerId=%d"]', $this->idOf($customer)));
     }
 
     public function testAnAdministratorPlacesAnOrderForANewGuestCustomer(): void
@@ -91,13 +91,17 @@ final class AdminOrderCreationFlowTest extends WebTestCase
         // 4. Shipping and payment
         $crawler = $this->client->followRedirect();
         $form = $crawler->selectButton('Next: Summary')->form();
-        $form['tmonier_admin_order_shipping_payment[shipment_0]']->select('dhl_express');
-        $form['tmonier_admin_order_shipping_payment[paymentMethod]']->select('bank_transfer');
+        $form->setValues([
+            'tmonier_admin_order_shipping_payment[shipment_0]' => 'dhl_express',
+            'tmonier_admin_order_shipping_payment[paymentMethod]' => 'bank_transfer',
+        ]);
         $this->client->submit($form);
         self::assertResponseRedirects(sprintf('/admin/order-drafts/%d/summary', $orderId));
         $order = $this->reloadOrder($orderId);
         self::assertSame(OrderCheckoutStates::STATE_PAYMENT_SELECTED, $order->getCheckoutState());
-        self::assertSame('dhl_express', $order->getShipments()->first()?->getMethod()?->getCode());
+        $shipment = $order->getShipments()->first();
+        self::assertNotFalse($shipment);
+        self::assertSame('dhl_express', $shipment->getMethod()?->getCode());
 
         // 5. Summary and completion
         $this->client->followRedirect();
@@ -138,9 +142,9 @@ final class AdminOrderCreationFlowTest extends WebTestCase
         $customer = $this->createCustomer('ada@example.com', withAccount: true, withAddress: true);
         $this->loginAdmin();
 
-        $crawler = $this->client->request('GET', sprintf('/admin/order-drafts/new?customerId=%d', (int) $customer->getId()));
+        $crawler = $this->client->request('GET', sprintf('/admin/order-drafts/new?customerId=%d', $this->idOf($customer)));
         self::assertResponseIsSuccessful();
-        self::assertSame((string) $customer->getId(), $crawler->filter('#tmonier_admin_order_start_customer option[selected]')->attr('value'));
+        self::assertSame((string) $this->idOf($customer), $crawler->filter('#tmonier_admin_order_start_customer option[selected]')->attr('value'));
 
         $this->client->submitForm('Start the order', [
             'tmonier_admin_order_start[channel]' => (string) $this->channel()->getCode(),

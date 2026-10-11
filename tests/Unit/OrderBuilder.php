@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests\Tmonier\SyliusAdminOrderCreationPlugin\Unit;
 
 use Sylius\Component\Core\Model\Adjustment;
+use Sylius\Component\Core\Model\AdjustmentInterface;
 use Sylius\Component\Core\Model\Order;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItem;
@@ -12,7 +13,6 @@ use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\OrderItemUnit;
 use Sylius\Component\Order\Factory\AdjustmentFactory;
 use Sylius\Component\Order\Factory\AdjustmentFactoryInterface;
-use Sylius\Resource\Factory\Factory;
 
 /** Builds real Sylius order models for the unit tests. */
 final class OrderBuilder
@@ -41,12 +41,9 @@ final class OrderBuilder
         return $item;
     }
 
-    /** @return AdjustmentFactoryInterface<\Sylius\Component\Core\Model\AdjustmentInterface> */
+    /** @return AdjustmentFactoryInterface<AdjustmentInterface> */
     public static function adjustmentFactory(): AdjustmentFactoryInterface
     {
-        /** @var AdjustmentFactoryInterface<\Sylius\Component\Core\Model\AdjustmentInterface> $factory */
-        $factory = new AdjustmentFactory(new Factory(Adjustment::class));
-
-        return $factory;
+        return new AdjustmentFactory(new InMemoryFactory(AdjustmentInterface::class, static fn (): AdjustmentInterface => new Adjustment()));
     }
 }

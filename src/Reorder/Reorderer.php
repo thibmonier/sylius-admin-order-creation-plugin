@@ -8,6 +8,7 @@ use Sylius\Component\Core\Model\AdminUserInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderFactoryInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderModifierInterface;
@@ -23,10 +24,10 @@ final class Reorderer implements ReordererInterface
 
     public function canReorder(OrderInterface $order): bool
     {
-        return OrderInterface::STATE_CART !== $order->getState()
-            && $order->getCustomer() instanceof CustomerInterface
-            && $order->getChannel() instanceof ChannelInterface
-            && !$order->getItems()->isEmpty()
+        return OrderInterface::STATE_CART !== $order->getState() &&
+            $order->getCustomer() instanceof CustomerInterface &&
+            $order->getChannel() instanceof ChannelInterface &&
+            !$order->getItems()->isEmpty()
         ;
     }
 
@@ -77,11 +78,11 @@ final class Reorderer implements ReordererInterface
     {
         $product = $variant->getProduct();
 
-        return $variant->isEnabled()
-            && null !== $product
-            && $product->isEnabled()
-            && $product->hasChannel($channel)
-            && null !== $variant->getChannelPricingForChannel($channel)?->getPrice()
+        return $variant->isEnabled() &&
+            $product instanceof ProductInterface &&
+            $product->isEnabled() &&
+            $product->hasChannel($channel) &&
+            null !== $variant->getChannelPricingForChannel($channel)?->getPrice()
         ;
     }
 }

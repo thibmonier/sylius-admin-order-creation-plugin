@@ -37,7 +37,6 @@ use Tmonier\SyliusAdminOrderCreationPlugin\Form\Type\CouponType;
 use Tmonier\SyliusAdminOrderCreationPlugin\Form\Type\ItemsType;
 use Tmonier\SyliusAdminOrderCreationPlugin\Form\Type\ManualDiscountType;
 use Tmonier\SyliusAdminOrderCreationPlugin\Form\Type\ShippingPaymentType;
-use Tmonier\SyliusAdminOrderCreationPlugin\Mailer\PaymentLinkEmailManagerInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Repository\AdminOrderCreationRepositoryInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Security\OrderAdjustmentVoter;
 
@@ -63,7 +62,6 @@ final class DraftOrderStepsController extends AbstractController
         private readonly ServiceRegistryInterface $shippingCalculators,
         private readonly MoneyFormatterInterface $moneyFormatter,
         private readonly FactoryInterface $addressFactory,
-        private readonly PaymentLinkEmailManagerInterface $paymentLinkEmailManager,
         private readonly EntityManagerInterface $entityManager,
         private readonly bool $sendConfirmationEmailDefault,
     ) {
@@ -110,7 +108,11 @@ final class DraftOrderStepsController extends AbstractController
         $priceOverrideAllowed = $this->isGranted(OrderAdjustmentVoter::PRICE_OVERRIDE);
         $changes = [];
         foreach ($order->getItems() as $item) {
-            $itemId = (int) $item->getId();
+            $itemId = $item->getId();
+            if (!is_int($itemId) || !$form->has(ItemsType::fieldName($itemId))) {
+                continue;
+            }
+
             /** @var array{quantity: int, unitPrice?: int|null} $itemData */
             $itemData = $form->get(ItemsType::fieldName($itemId))->getData();
             $changes[$itemId] = ['quantity' => $itemData['quantity']];

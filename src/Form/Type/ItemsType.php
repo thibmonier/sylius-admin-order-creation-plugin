@@ -27,7 +27,12 @@ final class ItemsType extends AbstractType
         $order = $options['order'];
 
         foreach ($order->getItems() as $item) {
-            $itemForm = $builder->create(self::fieldName((int) $item->getId()), FormType::class, ['label' => false])
+            $itemId = $item->getId();
+            if (!is_int($itemId)) {
+                continue;
+            }
+
+            $itemForm = $builder->create(self::fieldName($itemId), FormType::class, ['label' => false])
                 ->add('quantity', IntegerType::class, [
                     'label' => 'sylius.ui.quantity',
                     'data' => $item->getQuantity(),

@@ -22,12 +22,12 @@ final class PaymentLinkEmailManager implements PaymentLinkEmailManagerInterface
 
     public function canSend(OrderInterface $order): bool
     {
-        return $this->shopEnabled
-            && OrderInterface::STATE_NEW === $order->getState()
-            && null !== $order->getTokenValue()
-            && null !== $order->getCustomer()?->getEmail()
-            && in_array($order->getPaymentState(), self::PAYABLE_STATES, true)
-            && null !== $order->getLastPayment(PaymentInterface::STATE_NEW)
+        return $this->shopEnabled &&
+            OrderInterface::STATE_NEW === $order->getState() &&
+            null !== $order->getTokenValue() &&
+            null !== $order->getCustomer()?->getEmail() &&
+            in_array($order->getPaymentState(), self::PAYABLE_STATES, true) &&
+            null !== $order->getLastPayment(PaymentInterface::STATE_NEW)
         ;
     }
 

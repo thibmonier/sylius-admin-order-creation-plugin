@@ -120,10 +120,12 @@ final class ShopParityTest extends WebTestCase
         $payment = $order['payments'][0];
         self::assertIsArray($shipment);
         self::assertIsArray($payment);
-        $this->api('PATCH', sprintf('/api/v2/shop/orders/%s/shipments/%d', $token, (int) $shipment['id']), [
+        self::assertIsInt($shipment['id']);
+        self::assertIsInt($payment['id']);
+        $this->api('PATCH', sprintf('/api/v2/shop/orders/%s/shipments/%d', $token, $shipment['id']), [
             'shippingMethod' => '/api/v2/shop/shipping-methods/dhl_express',
         ]);
-        $this->api('PATCH', sprintf('/api/v2/shop/orders/%s/payments/%d', $token, (int) $payment['id']), [
+        $this->api('PATCH', sprintf('/api/v2/shop/orders/%s/payments/%d', $token, $payment['id']), [
             'paymentMethod' => '/api/v2/shop/payment-methods/bank_transfer',
         ]);
         $this->api('PATCH', sprintf('/api/v2/shop/orders/%s/complete', $token), []);

@@ -15,9 +15,10 @@ use Sylius\Component\Core\Model\Order;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Currency\Model\Currency;
 use Sylius\Component\Locale\Model\Locale;
-use Sylius\Resource\Factory\Factory;
+use Tests\Tmonier\SyliusAdminOrderCreationPlugin\Unit\InMemoryFactory;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderFactory;
 use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreation;
+use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
 
 final class DraftOrderFactoryTest extends TestCase
 {
@@ -46,7 +47,7 @@ final class DraftOrderFactoryTest extends TestCase
         self::assertTrue($order->isCreatedByGuest(), 'Never resumed as the shop cart of the customer.');
         self::assertSame('12 Analytical Street', $order->getBillingAddress()?->getStreet());
         self::assertNotSame($address, $order->getBillingAddress());
-        self::assertNull($order->getBillingAddress()?->getCustomer());
+        self::assertNull($order->getBillingAddress()->getCustomer());
         self::assertSame($admin, $draft->getAdminUser());
         self::assertTrue($draft->isDraft());
     }
@@ -60,7 +61,11 @@ final class DraftOrderFactoryTest extends TestCase
 
     private function factory(ObjectManager $entityManager): DraftOrderFactory
     {
-        return new DraftOrderFactory(new Factory(Order::class), new Factory(AdminOrderCreation::class), $entityManager);
+        return new DraftOrderFactory(
+            new InMemoryFactory(OrderInterface::class, static fn (): OrderInterface => new Order()),
+            new InMemoryFactory(AdminOrderCreationInterface::class, static fn (): AdminOrderCreationInterface => new AdminOrderCreation()),
+            $entityManager,
+        );
     }
 
     private function channel(): ChannelInterface

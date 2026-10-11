@@ -17,7 +17,7 @@ use Sylius\Component\Order\Modifier\OrderModifierInterface;
 use Sylius\Component\Order\Processor\OrderProcessorInterface;
 use Sylius\Component\Promotion\Checker\Eligibility\PromotionCouponEligibilityCheckerInterface;
 use Sylius\Component\Promotion\Repository\PromotionCouponRepositoryInterface;
-use Sylius\Resource\Factory\Factory;
+use Tests\Tmonier\SyliusAdminOrderCreationPlugin\Unit\InMemoryFactory;
 use Tests\Tmonier\SyliusAdminOrderCreationPlugin\Unit\OrderBuilder;
 use Tmonier\SyliusAdminOrderCreationPlugin\Discount\ManualDiscount;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderModifier;
@@ -52,7 +52,7 @@ final class DraftOrderModifierTest extends TestCase
         });
 
         $this->modifier = new DraftOrderModifier(
-            new Factory(OrderItem::class),
+            new InMemoryFactory(OrderItemInterface::class, static fn (): OrderItemInterface => new OrderItem()),
             $this->createMock(OrderModifierInterface::class),
             $quantityModifier,
             $this->processor,
@@ -105,7 +105,9 @@ final class DraftOrderModifierTest extends TestCase
 
         $requests = $order->getAdjustments(ManualDiscount::REQUEST_ADJUSTMENT_TYPE);
         self::assertCount(1, $requests, 'A new discount replaces the previous one.');
-        self::assertTrue($requests->first() instanceof \Sylius\Component\Order\Model\AdjustmentInterface && $requests->first()->isNeutral());
+        $request = $requests->first();
+        self::assertNotFalse($request);
+        self::assertTrue($request->isNeutral());
         self::assertSame(['amount' => 250, 'reason' => 'Late delivery'], $this->modifier->getManualDiscount($order));
         self::assertSame(1000, $order->getTotal(), 'The request itself does not change the total.');
 
@@ -153,9 +155,11 @@ final class DraftOrderModifierTest extends TestCase
         $this->couponRepository->method('findOneBy')->willReturn($coupon);
         $this->couponEligibilityChecker->method('isEligible')->willReturn(true);
 
-        $applies = false;
-        $this->processor->method('process')->willReturnCallback(static function (OrderInterface $order) use (&$applies, $promotion): void {
-            if ($applies && null !== $order->getPromotionCoupon()) {
+        $eligibility = new class() {
+            public bool $applies = false;
+        };
+        $this->processor->method('process')->willReturnCallback(static function (OrderInterface $order) use ($eligibility, $promotion): void {
+            if ($eligibility->applies && null !== $order->getPromotionCoupon()) {
                 $order->addPromotion($promotion);
             }
         });
@@ -163,7 +167,7 @@ final class DraftOrderModifierTest extends TestCase
         self::assertFalse($this->modifier->applyCoupon($order, 'SPRING'));
         self::assertNull($order->getPromotionCoupon());
 
-        $applies = true;
+        $eligibility->applies = true;
         self::assertTrue($this->modifier->applyCoupon($order, 'SPRING'));
         self::assertSame($coupon, $order->getPromotionCoupon());
 

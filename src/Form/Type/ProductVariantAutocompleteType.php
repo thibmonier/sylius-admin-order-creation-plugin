@@ -35,7 +35,8 @@ final class ProductVariantAutocompleteType extends AbstractType
             'security' => 'ROLE_ADMINISTRATION_ACCESS',
             'max_results' => 20,
             'filter_query' => static function (Options $options): callable {
-                $channelCode = $options['extra_options']['channel'] ?? null;
+                $extraOptions = $options['extra_options'];
+                $channelCode = is_array($extraOptions) ? ($extraOptions['channel'] ?? null) : null;
 
                 return static function (QueryBuilder $queryBuilder, string $query) use ($channelCode): void {
                     $queryBuilder

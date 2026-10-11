@@ -47,11 +47,12 @@ final class ManualDiscountType extends AbstractType
 
     public static function validate(mixed $data, ExecutionContextInterface $context): void
     {
-        if (!is_array($data) || (int) ($data['amount'] ?? 0) <= 0) {
+        if (!is_array($data) || !is_int($data['amount'] ?? null) || $data['amount'] <= 0) {
             return;
         }
 
-        if ('' === trim((string) ($data['reason'] ?? ''))) {
+        $reason = $data['reason'] ?? null;
+        if (!is_string($reason) || '' === trim($reason)) {
             $context->buildViolation('tmonier_admin_order.discount.reason_required')->atPath('[reason]')->addViolation();
         }
     }

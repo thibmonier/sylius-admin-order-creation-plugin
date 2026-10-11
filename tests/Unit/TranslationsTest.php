@@ -52,7 +52,6 @@ final class TranslationsTest extends TestCase
         }
     }
 
-
     /** Every translation key used by the templates and the PHP code exists in English. */
     public function testEveryKeyUsedByThePluginIsTranslated(): void
     {
@@ -65,12 +64,12 @@ final class TranslationsTest extends TestCase
         $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/templates'));
         $sources = [];
         foreach ($files as $file) {
-            if ($file->isFile()) {
+            if ($file instanceof \SplFileInfo && $file->isFile()) {
                 $sources[] = (string) file_get_contents($file->getPathname());
             }
         }
         foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($root . '/src')) as $file) {
-            if ($file->isFile()) {
+            if ($file instanceof \SplFileInfo && $file->isFile()) {
                 $sources[] = (string) file_get_contents($file->getPathname());
             }
         }

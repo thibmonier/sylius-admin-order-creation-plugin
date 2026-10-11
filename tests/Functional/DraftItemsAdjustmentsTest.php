@@ -37,7 +37,7 @@ final class DraftItemsAdjustmentsTest extends WebTestCase
         $order = $this->reloadOrder($orderId);
         $item = $order->getItems()->first();
         self::assertNotFalse($item);
-        $itemField = sprintf('tmonier_admin_order_items[item_%d]', (int) $item->getId());
+        $itemField = sprintf('tmonier_admin_order_items[item_%d]', $this->idOf($item));
         $catalogPrice = $item->getUnitPrice();
 
         $this->client->request('GET', sprintf('/admin/order-drafts/%d/items', $orderId));
@@ -126,10 +126,12 @@ final class DraftItemsAdjustmentsTest extends WebTestCase
         ]);
         self::assertResponseStatusCodeSame(403);
 
-        $form = $crawler->selectButton('Update items')->form();
-        $values = $form->getPhpValues();
-        $values['tmonier_admin_order_items'][sprintf('item_%d', (int) $item->getId())]['unitPrice'] = '1.00';
-        $this->client->request('POST', (string) $form->getUri(), $values);
+        $this->client->request('POST', sprintf('/admin/order-drafts/%d/items/update', $orderId), [
+            'tmonier_admin_order_items' => [
+                sprintf('item_%d', $this->idOf($item)) => ['quantity' => '1', 'unitPrice' => '1.00'],
+                '_token' => (string) $crawler->filter('#tmonier_admin_order_items__token')->attr('value'),
+            ],
+        ]);
         self::assertResponseStatusCodeSame(422, 'The extra field is rejected.');
         $item = $this->reloadOrder($orderId)->getItems()->first();
         self::assertNotFalse($item);
@@ -148,7 +150,7 @@ final class DraftItemsAdjustmentsTest extends WebTestCase
 
         $this->client->request('GET', sprintf('/admin/order-drafts/%d/items', $orderId));
         $this->client->submitForm('Update items', [
-            sprintf('tmonier_admin_order_items[item_%d][quantity]', (int) $first->getId()) => '0',
+            sprintf('tmonier_admin_order_items[item_%d][quantity]', $this->idOf($first)) => '0',
         ]);
         self::assertCount(1, $this->reloadOrder($orderId)->getItems());
 
@@ -170,7 +172,7 @@ final class DraftItemsAdjustmentsTest extends WebTestCase
         $item = $this->reloadOrder($orderId)->getItems()->first();
         self::assertNotFalse($item);
 
-        $this->client->request('POST', sprintf('/admin/order-drafts/%d/items/%d/remove', $orderId, (int) $item->getId()), ['_csrf_token' => 'forged']);
+        $this->client->request('POST', sprintf('/admin/order-drafts/%d/items/%d/remove', $orderId, $this->idOf($item)), ['_csrf_token' => 'forged']);
         self::assertResponseStatusCodeSame(403);
 
         $this->client->request('POST', sprintf('/admin/order-drafts/%d/delete', $orderId));

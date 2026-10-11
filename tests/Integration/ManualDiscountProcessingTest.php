@@ -48,7 +48,9 @@ final class ManualDiscountProcessingTest extends WebTestCase
         // The request is a neutral adjustment: it does not count twice.
         $requests = $order->getAdjustments(ManualDiscount::REQUEST_ADJUSTMENT_TYPE);
         self::assertCount(1, $requests);
-        self::assertTrue($requests->first() instanceof AdjustmentInterface && $requests->first()->isNeutral());
+        $request = $requests->first();
+        self::assertNotFalse($request);
+        self::assertTrue($request->isNeutral());
 
         $this->draftModifier()->setManualDiscount($order, 0, '');
         self::assertSame(0, $this->manualDiscountTotal($order));

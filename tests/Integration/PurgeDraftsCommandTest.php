@@ -32,7 +32,7 @@ final class PurgeDraftsCommandTest extends WebTestCase
         $old = $this->orderIdOf($this->createDraft($this->createCustomer('old.draft@example.com')));
         $recent = $this->orderIdOf($this->createDraft($this->createCustomer('recent.draft@example.com')));
         $placed = $this->placeAdminOrder($this->createCustomer('old.placed@example.com'));
-        $placedId = (int) $placed->getId();
+        $placedId = $this->idOf($placed);
         $this->age($old, 8);
         $this->age($placedId, 30);
         $this->age($recent, 6);
