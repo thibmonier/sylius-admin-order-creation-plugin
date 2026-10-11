@@ -130,7 +130,8 @@ The `AdminOrderCreation` resource can be extended like any Sylius resource
   back to the "addressed" checkout state: shipping and payment are confirmed again. Empty
   drafts cannot be placed.
 - **Placement** runs in a transaction holding a lock on the order row: the state is read again
-  (a double click or a concurrent deletion never places or deletes twice), the draft is
+  (a double click or a concurrent deletion never places or deletes twice), the coupon and the
+  promotions with a usage limit are locked and reloaded, the draft is
   recalculated with the shop's integrity check (`sylius.checker.order.promotions_integrity` and
   the total) and, if a promotion no longer applies or the total changed (expired promotion,
   coupon used up by other orders, new price), the admin is sent back to the summary with a

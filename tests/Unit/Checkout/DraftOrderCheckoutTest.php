@@ -184,6 +184,41 @@ final class DraftOrderCheckoutTest extends TestCase
         self::assertTrue($this->checkout->complete($this->creation(), false, false)->isPlaced());
     }
 
+    public function testAFailureAfterTheCommitDoesNotTurnAPlacedOrderIntoAnError(): void
+    {
+        $flushes = 0;
+        $this->entityManager->method('flush')->willReturnCallback(static function () use (&$flushes): void {
+            if (2 === ++$flushes) {
+                throw new \RuntimeException('Connection lost after the commit');
+            }
+        });
+        $this->connection->expects(self::once())->method('commit');
+        $this->logger->expects(self::once())->method('error');
+
+        $creation = $this->creation();
+        $result = $this->checkout->complete($creation, false, false);
+
+        self::assertTrue($result->isPlaced());
+        self::assertNotNull($creation->getCompletedAt());
+    }
+
+    public function testThePromotionUsagesAreLockedBeforeTheIntegrityCheck(): void
+    {
+        $calls = [];
+        $this->rowLock->method('lockPromotionUsages')->willReturnCallback(static function () use (&$calls): void {
+            $calls[] = 'lock';
+        });
+        $this->integrityChecker->method('check')->willReturnCallback(static function () use (&$calls): null {
+            $calls[] = 'check';
+
+            return null;
+        });
+
+        $this->checkout->complete($this->creation(), false, false);
+
+        self::assertSame(['lock', 'check'], $calls);
+    }
+
     public function testAnEmptyOrderIsNotReady(): void
     {
         $creation = $this->creation();

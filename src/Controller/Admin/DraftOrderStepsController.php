@@ -358,6 +358,12 @@ final class DraftOrderStepsController extends AbstractController
                 $result = $this->checkout->complete($draft, $data['sendConfirmationEmail'], $data['sendPaymentLink'] ?? false);
             } catch (\Throwable $exception) {
                 $this->logger?->error('The admin order could not be placed.', ['exception' => $exception]);
+                if ($this->isPlaced($order)) {
+                    $this->addFlash('warning', 'tmonier_admin_order.placed_with_errors');
+
+                    return $this->redirectToRoute('sylius_admin_order_show', ['id' => $id]);
+                }
+
                 $this->addFlash('error', 'tmonier_admin_order.completion_failed');
 
                 return $this->redirectToStep('summary', $draft);
@@ -397,6 +403,19 @@ final class DraftOrderStepsController extends AbstractController
             'form' => $form->createView(),
             'violations' => array_values(array_unique($messages)),
         ], $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK);
+    }
+
+    /** Reads the stored state: the entity manager may be closed after a failure. */
+    private function isPlaced(OrderInterface $order): bool
+    {
+        try {
+            $tableName = $this->entityManager->getClassMetadata($order::class)->getTableName();
+            $state = $this->entityManager->getConnection()->fetchOne(sprintf('SELECT state FROM %s WHERE id = ?', $tableName), [$order->getId()]);
+        } catch (\Throwable) {
+            return false;
+        }
+
+        return false !== $state && OrderInterface::STATE_CART !== $state;
     }
 
     /** @param array<string, FormInterface> $forms bound forms to show with their errors */

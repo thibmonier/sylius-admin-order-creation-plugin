@@ -55,6 +55,33 @@ final class ConcurrencyAndIntegrityTest extends WebTestCase
         self::assertSame(1, $this->entityManager()->getRepository(PromotionCouponInterface::class)->findOneBy(['code' => 'ONCE'])?->getUsed());
     }
 
+    public function testACouponUsedByAnotherDraftCommittedMeanwhileIsDetected(): void
+    {
+        $this->createSingleUseCoupon('RACE');
+        $first = $this->prepareDraftReadyToComplete('first.race@example.com');
+        $second = $this->prepareDraftReadyToComplete('second.race@example.com');
+        foreach ([$first, $second] as $orderId) {
+            $order = $this->reloadOrder($orderId);
+            self::assertTrue($this->draftModifier()->applyCoupon($order, 'RACE'));
+            $this->reselectMethods($order);
+        }
+        $secondOrder = $this->reloadOrder($second);
+        $secondDraft = $this->findCreation($secondOrder);
+        self::assertNotNull($secondDraft);
+        self::assertSame(0, $secondOrder->getPromotionCoupon()?->getUsed(), 'Loaded before the other placement.');
+
+        // Another request placed the first draft with the coupon after this one was loaded.
+        $this->connection()->executeStatement("UPDATE sylius_promotion_coupon SET used = 1 WHERE code = 'RACE'");
+        $this->connection()->executeStatement("UPDATE sylius_order SET state = 'new', checkout_state = 'completed', number = 'RACE-A' WHERE id = ?", [$first]);
+
+        $result = $this->checkout()->complete($secondDraft, false, false);
+
+        self::assertSame(CompletionResult::CHANGED, $result->status);
+        self::assertSame(OrderInterface::STATE_CART, $secondOrder->getState());
+        self::assertSame(1, $this->fetchInt("SELECT used FROM sylius_promotion_coupon WHERE code = 'RACE'"));
+        self::assertNull($secondOrder->getPromotionCoupon(), 'The used-up coupon is taken off the draft.');
+    }
+
     public function testADraftPlacedByAConcurrentRequestIsNotPlacedTwice(): void
     {
         $orderId = $this->prepareDraftReadyToComplete('double.submit@example.com');

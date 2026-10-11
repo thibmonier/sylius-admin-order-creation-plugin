@@ -126,6 +126,7 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
                 return CompletionResult::notADraft();
             }
 
+            $this->orderRowLock->lockPromotionUsages($order);
             $oldTotal = $order->getTotal();
             $removedPromotion = $this->promotionsIntegrityChecker->check($order);
             $this->dropInapplicableCoupon($order);
@@ -161,9 +162,14 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
             $emailFailed = $emailFailed || !$paymentLinkSent;
         }
 
-        $creation->setConfirmationEmailSent($confirmationSent);
-        $creation->setPaymentLinkSentAt($paymentLinkSent ? $this->clock->now() : null);
-        $this->entityManager->flush();
+        // The order is placed and committed: from here on, failures are logged, never thrown.
+        try {
+            $creation->setConfirmationEmailSent($confirmationSent);
+            $creation->setPaymentLinkSentAt($paymentLinkSent ? $this->clock->now() : null);
+            $this->entityManager->flush();
+        } catch (\Throwable $exception) {
+            $this->logger->error(sprintf('Unable to save the e-mail flags of the order "%s".', (string) $order->getNumber()), ['exception' => $exception]);
+        }
 
         try {
             $this->eventDispatcher->dispatch(new AdminOrderCreatedEvent($order, $creation), AdminOrderCreatedEvent::NAME);

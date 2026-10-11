@@ -31,4 +31,23 @@ final class OrderRowLock implements OrderRowLockInterface
 
         return OrderInterface::STATE_CART === $state;
     }
+
+    public function lockPromotionUsages(OrderInterface $order): void
+    {
+        $coupon = $order->getPromotionCoupon();
+        $promotions = $order->getPromotions()->toArray();
+        if (null !== $coupon) {
+            $this->entityManager->refresh($coupon, LockMode::PESSIMISTIC_WRITE);
+            $couponPromotion = $coupon->getPromotion();
+            if (null !== $couponPromotion && !in_array($couponPromotion, $promotions, true)) {
+                $promotions[] = $couponPromotion;
+            }
+        }
+
+        foreach ($promotions as $promotion) {
+            if (null !== $promotion->getUsageLimit()) {
+                $this->entityManager->refresh($promotion, LockMode::PESSIMISTIC_WRITE);
+            }
+        }
+    }
 }

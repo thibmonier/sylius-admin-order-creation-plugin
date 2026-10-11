@@ -1,4 +1,5 @@
 tmonier_admin_order:
+    placed_with_errors: 'The order has been placed, but an error occurred afterwards (see the logs).'
     totals_updated: 'Prices or promotions changed since the last modification: the totals have been recalculated.'
     completion_failed: 'The order could not be placed (it was changed in the meantime, for instance the stock). Please review it and try again.'
     already_placed: 'This draft has already been placed or deleted.'

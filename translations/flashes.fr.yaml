@@ -1,4 +1,5 @@
 tmonier_admin_order:
+    placed_with_errors: 'La commande a été passée, mais une erreur est survenue ensuite (voir les journaux).'
     totals_updated: 'Des prix ou des promotions ont changé depuis la dernière modification : les totaux ont été recalculés.'
     completion_failed: "La commande n'a pas pu être passée (elle a changé entre-temps, par exemple le stock). Vérifiez-la puis réessayez."
     already_placed: 'Ce brouillon a déjà été passé ou supprimé.'

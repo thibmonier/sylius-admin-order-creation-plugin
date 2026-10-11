@@ -1,4 +1,5 @@
 tmonier_admin_order:
+    placed_with_errors: "L'ordine è stato effettuato, ma in seguito si è verificato un errore (vedi i log)."
     totals_updated: "Prezzi o promozioni sono cambiati dall'ultima modifica: i totali sono stati ricalcolati."
     completion_failed: "Non è stato possibile effettuare l'ordine (è cambiato nel frattempo, ad esempio lo stock). Controllalo e riprova."
     already_placed: 'Questa bozza è già stata effettuata o eliminata.'
