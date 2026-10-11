@@ -37,8 +37,8 @@ tmonier_admin_order:
         update_items: 'Artikelen bijwerken'
         add_product: 'Product toevoegen'
         add: Toevoegen
-        apply_coupon: Toepassen
-        apply_discount: Toepassen
+        apply_coupon: 'Coupon toepassen'
+        apply_discount: 'Korting toepassen'
         next_step: 'Volgende: %step%'
         address_book: Adresboek
         use_address: 'Dit adres gebruiken'

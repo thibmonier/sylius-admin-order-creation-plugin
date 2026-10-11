@@ -37,8 +37,8 @@ tmonier_admin_order:
         update_items: 'Actualizar artículos'
         add_product: 'Añadir un producto'
         add: Añadir
-        apply_coupon: Aplicar
-        apply_discount: Aplicar
+        apply_coupon: 'Aplicar cupón'
+        apply_discount: 'Aplicar descuento'
         next_step: 'Siguiente: %step%'
         address_book: 'Libreta de direcciones'
         use_address: 'Usar esta dirección'
