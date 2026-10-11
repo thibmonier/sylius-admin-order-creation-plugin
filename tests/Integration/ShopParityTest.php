@@ -43,7 +43,6 @@ final class ShopParityTest extends WebTestCase
         $first = $this->variant(0);
         $second = $this->variant(1);
         $this->createCouponPromotion('PARITY', 500);
-        $this->createTaxRateForShippingZone($first);
         $firstCode = (string) $first->getCode();
         $secondCode = (string) $second->getCode();
 
@@ -107,9 +106,9 @@ final class ShopParityTest extends WebTestCase
                 'firstName' => 'Grace',
                 'lastName' => 'Hopper',
                 'street' => '1 Main Street',
-                'city' => 'Cambridge',
-                'postcode' => 'CB2 1TN',
-                'countryCode' => 'GB',
+                'city' => 'London',
+                'postcode' => 'NW1 6XE',
+                'countryCode' => self::COUNTRY,
             ],
             'couponCode' => $couponCode,
         ]);
@@ -123,10 +122,10 @@ final class ShopParityTest extends WebTestCase
         self::assertIsInt($shipment['id']);
         self::assertIsInt($payment['id']);
         $this->api('PATCH', sprintf('/api/v2/shop/orders/%s/shipments/%d', $token, $shipment['id']), [
-            'shippingMethod' => '/api/v2/shop/shipping-methods/dhl_express',
+            'shippingMethod' => sprintf('/api/v2/shop/shipping-methods/%s', self::EXPRESS_SHIPPING_METHOD),
         ]);
         $this->api('PATCH', sprintf('/api/v2/shop/orders/%s/payments/%d', $token, $payment['id']), [
-            'paymentMethod' => '/api/v2/shop/payment-methods/bank_transfer',
+            'paymentMethod' => sprintf('/api/v2/shop/payment-methods/%s', self::PAYMENT_METHOD),
         ]);
         $this->api('PATCH', sprintf('/api/v2/shop/orders/%s/complete', $token), []);
 
@@ -154,8 +153,8 @@ final class ShopParityTest extends WebTestCase
         $order->setShippingAddress($this->createAddress('Grace', 'Hopper', '1 Main Street'));
         $this->checkout()->address($order);
 
-        $shippingMethod = $this->entityManager()->getRepository(ShippingMethodInterface::class)->findOneBy(['code' => 'dhl_express']);
-        $paymentMethod = $this->entityManager()->getRepository(PaymentMethodInterface::class)->findOneBy(['code' => 'bank_transfer']);
+        $shippingMethod = $this->entityManager()->getRepository(ShippingMethodInterface::class)->findOneBy(['code' => self::EXPRESS_SHIPPING_METHOD]);
+        $paymentMethod = $this->entityManager()->getRepository(PaymentMethodInterface::class)->findOneBy(['code' => self::PAYMENT_METHOD]);
         self::assertInstanceOf(\Sylius\Component\Core\Model\ShippingMethodInterface::class, $shippingMethod);
         self::assertInstanceOf(\Sylius\Component\Core\Model\PaymentMethodInterface::class, $paymentMethod);
         $this->checkout()->selectShippingAndPayment($order, [0 => $shippingMethod], $paymentMethod);
@@ -216,27 +215,6 @@ final class ShopParityTest extends WebTestCase
         $this->entityManager()->flush();
     }
 
-    /** The fixtures only tax the US zone, the shipping methods only serve the WORLD zone. */
-    private function createTaxRateForShippingZone(\Sylius\Component\Core\Model\ProductVariantInterface $variant): void
-    {
-        $category = $variant->getTaxCategory();
-        self::assertNotNull($category, 'The fixture variants have a tax category.');
-        $zone = $this->entityManager()->getRepository(ZoneInterface::class)->findOneBy(['code' => 'WORLD']);
-        self::assertInstanceOf(ZoneInterface::class, $zone);
-
-        /** @var FactoryInterface<TaxRateInterface> $taxRateFactory */
-        $taxRateFactory = self::getContainer()->get('sylius.factory.tax_rate');
-        $rate = $taxRateFactory->createNew();
-        $rate->setCode('PARITY_WORLD_10');
-        $rate->setName('World 10%');
-        $rate->setAmount(0.1);
-        $rate->setIncludedInPrice(false);
-        $rate->setCalculator('default');
-        $rate->setCategory($category);
-        $rate->setZone($zone);
-        $this->entityManager()->persist($rate);
-        $this->entityManager()->flush();
-    }
 
     /** @return list<string> */
     private function promotionCodes(OrderInterface $order): array

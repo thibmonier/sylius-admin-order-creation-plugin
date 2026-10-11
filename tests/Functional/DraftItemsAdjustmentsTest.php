@@ -78,7 +78,9 @@ final class DraftItemsAdjustmentsTest extends WebTestCase
         }
         self::assertSame(-500, $manual);
         self::assertLessThanOrEqual(-500, $distributed);
-        self::assertSame('Loyal customer', $this->draftModifier()->getManualDiscount($order)['reason'] ?? null);
+        $creation = $this->findCreation($order);
+        self::assertNotNull($creation);
+        self::assertSame('Loyal customer', $this->draftModifier()->getManualDiscount($creation)['reason'] ?? null);
 
         $this->client->followRedirect();
         self::assertSelectorTextContains('[data-test-draft-manual-discount]', 'Loyal customer');
@@ -105,7 +107,9 @@ final class DraftItemsAdjustmentsTest extends WebTestCase
 
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('[data-test-manual-discount]', 'Please give a reason for the discount.');
-        self::assertNull($this->draftModifier()->getManualDiscount($this->reloadOrder($orderId)));
+        $creation = $this->findCreation($this->reloadOrder($orderId));
+        self::assertNotNull($creation);
+        self::assertNull($this->draftModifier()->getManualDiscount($creation));
     }
 
     public function testWithoutTheRoleThereIsNoCustomPriceNorManualDiscount(): void

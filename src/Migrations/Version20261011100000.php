@@ -28,6 +28,7 @@ final class Version20261011100000 extends AbstractMigration
         $table->addColumn('admin_name', Types::STRING, ['length' => 255, 'notnull' => false]);
         $table->addColumn('created_at', Types::DATETIME_IMMUTABLE);
         $table->addColumn('completed_at', Types::DATETIME_IMMUTABLE, ['notnull' => false]);
+        $table->addColumn('manual_discount_reason', Types::STRING, ['length' => 255, 'notnull' => false]);
         $table->addColumn('confirmation_email_sent', Types::BOOLEAN);
         $table->addColumn('payment_link_sent_at', Types::DATETIME_IMMUTABLE, ['notnull' => false]);
         $table->setPrimaryKey(['id']);

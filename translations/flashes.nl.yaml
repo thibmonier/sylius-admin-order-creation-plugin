@@ -1,4 +1,9 @@
 tmonier_admin_order:
+    totals_updated: 'Prijzen of promoties zijn sinds de laatste wijziging veranderd: de totalen zijn opnieuw berekend.'
+    completion_failed: 'De bestelling kon niet worden geplaatst (ze is intussen gewijzigd, bijvoorbeeld de voorraad). Controleer ze en probeer het opnieuw.'
+    already_placed: 'Dit concept is al geplaatst of verwijderd.'
+    promotion_changed: 'De promotie „%promotion%” is niet meer van toepassing: controleer de bestelling voordat u ze plaatst.'
+    total_changed: 'Het totaal van de bestelling is gewijzigd: controleer ze voordat u ze plaatst.'
     draft_created: 'De conceptbestelling is aangemaakt.'
     draft_deleted: 'De conceptbestelling is verwijderd.'
     reorder_impossible: 'Deze bestelling kan niet opnieuw worden besteld.'

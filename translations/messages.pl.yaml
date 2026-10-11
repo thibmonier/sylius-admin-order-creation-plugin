@@ -1,5 +1,7 @@
 tmonier_admin_order:
     ui:
+        discount_removal_only: 'Ten rabat przyznał uprawniony administrator: możesz go tylko usunąć.'
+        remove_discount: 'Usuń rabat'
         no_method_available: 'Brak dostępnej metody dla tego zamówienia i adresu: sprawdź adres lub konfigurację metod (strefy, kanał).'
         new_order: 'Nowe zamówienie'
         new_order_subtitle: 'Zamówienie telefoniczne lub z zaplecza w imieniu klienta'
@@ -46,6 +48,7 @@ tmonier_admin_order:
         cannot_complete: 'Zamówienia nie można jeszcze złożyć'
         place_order: 'Złóż zamówienie'
     form:
+        reset_price: 'Przywróć cenę katalogową'
         locale: Język
         locale_placeholder: 'Domyślny język kanału'
         locale_help: 'Język wiadomości e-mail wysyłanych do klienta.'

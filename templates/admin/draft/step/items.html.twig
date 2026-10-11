@@ -23,6 +23,7 @@
                         <th class="text-end">{{ 'sylius.ui.unit_price'|trans }}</th>
                         <th>{{ 'sylius.ui.quantity'|trans }}</th>
                         {% if ctx.price_override_allowed %}<th>{{ 'tmonier_admin_order.form.custom_unit_price'|trans }}</th>{% endif %}
+                        {% if not ctx.price_override_allowed and order.items|filter(i => i.immutable)|length > 0 %}<th>{{ 'tmonier_admin_order.ui.custom_price'|trans }}</th>{% endif %}
                         <th class="text-end">{{ 'sylius.ui.total'|trans }}</th>
                         <th></th>
                     </tr>
@@ -55,6 +56,9 @@
                                 </td>
                             {% elseif ctx.price_override_allowed %}
                                 <td></td>
+                            {% endif %}
+                            {% if item_form.resetPrice is defined %}
+                                <td class="text-nowrap">{{ form_widget(item_form.resetPrice) }}</td>
                             {% endif %}
                             <td class="text-end text-nowrap" data-test-draft-item-total>{{ money.format(item.total, currency) }}</td>
                             <td class="text-end">
@@ -123,9 +127,16 @@
                 <div class="card-body">
                     {{ form_start(ctx.discount_form, {attr: {novalidate: 'novalidate'}}) }}
                     {{ form_errors(ctx.discount_form) }}
-                    {{ form_row(ctx.discount_form.amount) }}
-                    {{ form_row(ctx.discount_form.reason) }}
-                    <button type="submit" class="btn" data-test-apply-discount>{{ 'tmonier_admin_order.ui.apply_discount'|trans }}</button>
+                    {% if ctx.manual_discount_allowed %}
+                        {{ form_row(ctx.discount_form.amount) }}
+                        {{ form_row(ctx.discount_form.reason) }}
+                        <button type="submit" class="btn" data-test-apply-discount>{{ 'tmonier_admin_order.ui.apply_discount'|trans }}</button>
+                    {% else %}
+                        <div class="form-hint mb-2">{{ 'tmonier_admin_order.ui.discount_removal_only'|trans }}</div>
+                        {% do ctx.discount_form.amount.setRendered %}
+                        {% do ctx.discount_form.reason.setRendered %}
+                        <button type="submit" class="btn btn-outline-danger" data-test-remove-discount>{{ 'tmonier_admin_order.ui.remove_discount'|trans }}</button>
+                    {% endif %}
                     {{ form_end(ctx.discount_form) }}
                 </div>
             </div>

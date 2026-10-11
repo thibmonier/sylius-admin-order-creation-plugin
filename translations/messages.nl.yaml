@@ -1,5 +1,7 @@
 tmonier_admin_order:
     ui:
+        discount_removal_only: 'Deze korting is gegeven door een bevoegde beheerder: u kunt ze alleen verwijderen.'
+        remove_discount: 'Korting verwijderen'
         no_method_available: 'Er is geen methode beschikbaar voor deze bestelling en dit adres: controleer het adres of de configuratie van de methoden (zones, kanaal).'
         new_order: 'Nieuwe bestelling'
         new_order_subtitle: 'Telefonische of backoffice-bestelling namens een klant'
@@ -46,6 +48,7 @@ tmonier_admin_order:
         cannot_complete: 'De bestelling kan nog niet worden geplaatst'
         place_order: 'Bestelling plaatsen'
     form:
+        reset_price: 'Catalogusprijs herstellen'
         locale: Taal
         locale_placeholder: 'Standaardtaal van het kanaal'
         locale_help: 'Taal van de e-mails aan de klant.'

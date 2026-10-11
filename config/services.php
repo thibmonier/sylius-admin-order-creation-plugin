@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Tmonier\SyliusAdminOrderCreationPlugin\Checker\SellableVariantChecker;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\DraftOrderCheckout;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\DraftOrderCheckoutInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\OrderRowLock;
 use Tmonier\SyliusAdminOrderCreationPlugin\Command\PurgeDraftsCommand;
 use Tmonier\SyliusAdminOrderCreationPlugin\Controller\Admin\DraftOrderController;
 use Tmonier\SyliusAdminOrderCreationPlugin\Controller\Admin\DraftOrderStepsController;
@@ -21,6 +23,9 @@ use Tmonier\SyliusAdminOrderCreationPlugin\Mailer\PaymentLinkEmailManagerInterfa
 use Tmonier\SyliusAdminOrderCreationPlugin\Menu\AdminMenuListener;
 use Tmonier\SyliusAdminOrderCreationPlugin\Purger\DraftPurger;
 use Tmonier\SyliusAdminOrderCreationPlugin\Purger\DraftPurgerInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Remover\DraftRemover;
+use Tmonier\SyliusAdminOrderCreationPlugin\Remover\DraftRemoverInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Remover\ExpiredCartsRemover;
 use Tmonier\SyliusAdminOrderCreationPlugin\Reorder\Reorderer;
 use Tmonier\SyliusAdminOrderCreationPlugin\Reorder\ReordererInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Repository\AdminOrderCreationRepositoryInterface;
@@ -53,6 +58,9 @@ return static function (ContainerConfigurator $container): void {
             service('sylius.factory.adjustment'),
             service('sylius.repository.promotion_coupon'),
             service('sylius.checker.promotion_coupon_eligibility'),
+            service('sylius_abstraction.state_machine'),
+            param('tmonier_admin_order.allow_price_override'),
+            param('tmonier_admin_order.allow_manual_discount'),
         ])
     ;
     $services->alias(DraftOrderModifierInterface::class, 'tmonier_admin_order.draft.modifier');
@@ -73,10 +81,13 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('sylius_abstraction.state_machine'),
             service('validator'),
-            service('sylius.manager.order'),
+            service('doctrine.orm.entity_manager'),
+            service('sylius.checker.order.promotions_integrity'),
+            service('tmonier_admin_order.order_row_lock'),
             service('sylius.mailer.order_email_manager'),
             service('tmonier_admin_order.mailer.payment_link'),
             service('event_dispatcher'),
+            service('translator'),
             service('clock'),
             service('logger'),
         ])
@@ -98,17 +109,47 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('tmonier_admin_order.draft.factory'),
             service('tmonier_admin_order.draft.modifier'),
+            service('tmonier_admin_order.checker.sellable_variant'),
         ])
     ;
     $services->alias(ReordererInterface::class, 'tmonier_admin_order.reorderer');
 
     $services
+        ->set('tmonier_admin_order.order_row_lock', OrderRowLock::class)
+        ->args([service('doctrine.orm.entity_manager')])
+    ;
+
+    $services
+        ->set('tmonier_admin_order.draft_remover', DraftRemover::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('tmonier_admin_order.order_row_lock'),
+        ])
+    ;
+    $services->alias(DraftRemoverInterface::class, 'tmonier_admin_order.draft_remover');
+
+    $services
         ->set('tmonier_admin_order.purger', DraftPurger::class)
         ->args([
             service('tmonier_admin_order.repository.admin_order_creation'),
-            service('sylius.manager.order'),
+            service('tmonier_admin_order.draft_remover'),
         ])
     ;
+
+    // sylius:remove-expired-carts must leave the admin drafts alone.
+    $services
+        ->set('tmonier_admin_order.remover.expired_carts', ExpiredCartsRemover::class)
+        ->decorate('sylius.remover.expired_carts')
+        ->args([
+            service('sylius.repository.order'),
+            service('sylius.manager.order'),
+            service('event_dispatcher'),
+            param('sylius_order.cart_expiration_period'),
+            param('tmonier_admin_order.model.admin_order_creation.class'),
+        ])
+    ;
+
+    $services->set('tmonier_admin_order.checker.sellable_variant', SellableVariantChecker::class);
     $services->alias(DraftPurgerInterface::class, 'tmonier_admin_order.purger');
 
     $services
@@ -144,6 +185,7 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_admin_order.draft.factory'),
             service('tmonier_admin_order.reorderer'),
             service('sylius.manager.order'),
+            service('tmonier_admin_order.draft_remover'),
         ])
         ->call('setContainer', [service(\Psr\Container\ContainerInterface::class)])
         ->tag('controller.service_arguments')
@@ -163,7 +205,10 @@ return static function (ContainerConfigurator $container): void {
             service('sylius.formatter.money'),
             service('sylius.factory.address'),
             service('sylius.manager.order'),
+            service('tmonier_admin_order.checker.sellable_variant'),
+            service('translator'),
             param('tmonier_admin_order.send_confirmation_email_default'),
+            service('logger'),
         ])
         ->call('setContainer', [service(\Psr\Container\ContainerInterface::class)])
         ->tag('controller.service_arguments')

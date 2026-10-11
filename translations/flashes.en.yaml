@@ -1,4 +1,9 @@
 tmonier_admin_order:
+    totals_updated: 'Prices or promotions changed since the last modification: the totals have been recalculated.'
+    completion_failed: 'The order could not be placed (it was changed in the meantime, for instance the stock). Please review it and try again.'
+    already_placed: 'This draft has already been placed or deleted.'
+    promotion_changed: 'The promotion "%promotion%" no longer applies: please review the order before placing it.'
+    total_changed: 'The total of the order changed: please review it before placing it.'
     draft_created: 'The draft order has been created.'
     draft_deleted: 'The draft order has been deleted.'
     reorder_impossible: 'This order cannot be reordered.'

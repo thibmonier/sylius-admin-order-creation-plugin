@@ -23,6 +23,8 @@ class AdminOrderCreation implements AdminOrderCreationInterface
 
     protected ?\DateTimeImmutable $completedAt = null;
 
+    protected ?string $manualDiscountReason = null;
+
     protected bool $confirmationEmailSent = false;
 
     protected ?\DateTimeImmutable $paymentLinkSentAt = null;
@@ -101,6 +103,16 @@ class AdminOrderCreation implements AdminOrderCreationInterface
     public function isDraft(): bool
     {
         return null === $this->completedAt && OrderInterface::STATE_CART === $this->order?->getState();
+    }
+
+    public function getManualDiscountReason(): ?string
+    {
+        return $this->manualDiscountReason;
+    }
+
+    public function setManualDiscountReason(?string $manualDiscountReason): void
+    {
+        $this->manualDiscountReason = $manualDiscountReason;
     }
 
     public function isConfirmationEmailSent(): bool

@@ -1,4 +1,9 @@
 tmonier_admin_order:
+    totals_updated: "Prezzi o promozioni sono cambiati dall'ultima modifica: i totali sono stati ricalcolati."
+    completion_failed: "Non è stato possibile effettuare l'ordine (è cambiato nel frattempo, ad esempio lo stock). Controllalo e riprova."
+    already_placed: 'Questa bozza è già stata effettuata o eliminata.'
+    promotion_changed: "La promozione «%promotion%» non si applica più: controlla l'ordine prima di effettuarlo."
+    total_changed: "Il totale dell'ordine è cambiato: controllalo prima di effettuarlo."
     draft_created: "L'ordine in bozza è stato creato."
     draft_deleted: "L'ordine in bozza è stato eliminato."
     reorder_impossible: 'Questo ordine non può essere ordinato di nuovo.'

@@ -22,11 +22,16 @@ use Sylius\Component\Shipping\Calculator\CalculatorInterface;
 use Sylius\Component\Shipping\Resolver\ShippingMethodsResolverInterface;
 use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Psr\Log\LoggerInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Checker\SellableVariantChecker;
+use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\CompletionResult;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\DraftOrderCheckoutInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderModifierInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
@@ -63,20 +68,34 @@ final class DraftOrderStepsController extends AbstractController
         private readonly MoneyFormatterInterface $moneyFormatter,
         private readonly FactoryInterface $addressFactory,
         private readonly EntityManagerInterface $entityManager,
+        private readonly SellableVariantChecker $sellableVariantChecker,
+        private readonly TranslatorInterface $translator,
         private readonly bool $sendConfirmationEmailDefault,
+        private readonly ?LoggerInterface $logger = null,
     ) {
+    }
+
+    /** The draft, cleaned of the custom prices or discount of a feature disabled since. */
+    private function loadDraft(int $orderId): AdminOrderCreationInterface
+    {
+        $draft = $this->getDraft($orderId);
+        if ($this->draftOrderModifier->enforceFeatureSwitches($draft)) {
+            $this->entityManager->flush();
+        }
+
+        return $draft;
     }
 
     public function itemsAction(int $id): Response
     {
-        $draft = $this->getDraft($id);
+        $draft = $this->loadDraft($id);
 
         return $this->renderItems($draft);
     }
 
     public function addItemAction(Request $request, int $id): Response
     {
-        $draft = $this->getDraft($id);
+        $draft = $this->loadDraft($id);
         $order = $this->orderOf($draft);
 
         $form = $this->createAddItemForm($order);
@@ -87,6 +106,13 @@ final class DraftOrderStepsController extends AbstractController
 
         /** @var array{variant: ProductVariantInterface, quantity: int} $data */
         $data = $form->getData();
+        $channel = $order->getChannel();
+        if (!$channel instanceof ChannelInterface || !$this->sellableVariantChecker->isSellable($data['variant'], $channel)) {
+            $form->get('variant')->addError(new FormError($this->translator->trans('tmonier_admin_order.item.not_sellable', [], 'validators')));
+
+            return $this->renderItems($draft, ['add_item_form' => $form], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $this->draftOrderModifier->addVariant($order, $data['variant'], $data['quantity']);
         $this->entityManager->flush();
         $this->addFlash('success', 'tmonier_admin_order.item_added');
@@ -96,7 +122,7 @@ final class DraftOrderStepsController extends AbstractController
 
     public function updateItemsAction(Request $request, int $id): Response
     {
-        $draft = $this->getDraft($id);
+        $draft = $this->loadDraft($id);
         $order = $this->orderOf($draft);
 
         $form = $this->createItemsForm($order);
@@ -113,11 +139,14 @@ final class DraftOrderStepsController extends AbstractController
                 continue;
             }
 
-            /** @var array{quantity: int, unitPrice?: int|null} $itemData */
+            /** @var array{quantity: int, unitPrice?: int|null, resetPrice?: bool} $itemData */
             $itemData = $form->get(ItemsType::fieldName($itemId))->getData();
             $changes[$itemId] = ['quantity' => $itemData['quantity']];
             if ($priceOverrideAllowed && array_key_exists('unitPrice', $itemData)) {
                 $changes[$itemId]['unitPrice'] = $itemData['unitPrice'];
+            } elseif (true === ($itemData['resetPrice'] ?? false)) {
+                // Without the permission, a custom price can be removed, not set.
+                $changes[$itemId]['unitPrice'] = null;
             }
         }
 
@@ -130,7 +159,7 @@ final class DraftOrderStepsController extends AbstractController
 
     public function removeItemAction(Request $request, int $id, int $itemId): Response
     {
-        $draft = $this->getDraft($id);
+        $draft = $this->loadDraft($id);
         $order = $this->orderOf($draft);
         $this->assertCsrfToken($request, self::draftCsrfTokenId('remove_item', $itemId));
 
@@ -148,14 +177,14 @@ final class DraftOrderStepsController extends AbstractController
 
     public function manualDiscountAction(Request $request, int $id): Response
     {
-        if (!$this->isGranted(OrderAdjustmentVoter::MANUAL_DISCOUNT)) {
+        $draft = $this->loadDraft($id);
+        $order = $this->orderOf($draft);
+        $granted = $this->isGranted(OrderAdjustmentVoter::MANUAL_DISCOUNT);
+        if (!$granted && null === $this->draftOrderModifier->getManualDiscount($draft)) {
             throw new AccessDeniedHttpException('Manual discounts are not allowed.');
         }
 
-        $draft = $this->getDraft($id);
-        $order = $this->orderOf($draft);
-
-        $form = $this->createManualDiscountForm($order);
+        $form = $this->createManualDiscountForm($draft);
         $form->handleRequest($request);
         if (!$form->isSubmitted() || !$form->isValid()) {
             return $this->renderItems($draft, ['discount_form' => $form], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -163,8 +192,12 @@ final class DraftOrderStepsController extends AbstractController
 
         /** @var array{amount: int|null, reason: string|null} $data */
         $data = $form->getData();
-        $amount = (int) $data['amount'];
-        $this->draftOrderModifier->setManualDiscount($order, $amount, (string) $data['reason']);
+        $amount = $data['amount'] ?? 0;
+        if (!$granted && $amount > 0) {
+            // Without the permission, an existing discount can be removed, not set.
+            throw new AccessDeniedHttpException('Manual discounts are not allowed.');
+        }
+        $this->draftOrderModifier->setManualDiscount($draft, $amount, (string) $data['reason']);
         $this->entityManager->flush();
         $this->addFlash('success', $amount > 0 ? 'tmonier_admin_order.discount_applied' : 'tmonier_admin_order.discount_removed');
 
@@ -173,7 +206,7 @@ final class DraftOrderStepsController extends AbstractController
 
     public function couponAction(Request $request, int $id): Response
     {
-        $draft = $this->getDraft($id);
+        $draft = $this->loadDraft($id);
         $order = $this->orderOf($draft);
 
         $form = $this->createCouponForm($order);
@@ -199,7 +232,7 @@ final class DraftOrderStepsController extends AbstractController
 
     public function addressAction(Request $request, int $id): Response
     {
-        $draft = $this->getDraft($id);
+        $draft = $this->loadDraft($id);
         $order = $this->orderOf($draft);
         if ($order->getItems()->isEmpty()) {
             $this->addFlash('error', 'tmonier_admin_order.no_items');
@@ -235,7 +268,7 @@ final class DraftOrderStepsController extends AbstractController
 
     public function shippingPaymentAction(Request $request, int $id): Response
     {
-        $draft = $this->getDraft($id);
+        $draft = $this->loadDraft($id);
         $order = $this->orderOf($draft);
         if (in_array($order->getCheckoutState(), ['cart'], true)) {
             return $this->redirectToStep('address', $draft);
@@ -290,8 +323,13 @@ final class DraftOrderStepsController extends AbstractController
 
     public function summaryAction(Request $request, int $id): Response
     {
-        $draft = $this->getDraft($id);
+        $draft = $this->loadDraft($id);
         $order = $this->orderOf($draft);
+        if ($order->getItems()->isEmpty()) {
+            $this->addFlash('error', 'tmonier_admin_order.no_items');
+
+            return $this->redirectToStep('items', $draft);
+        }
         if (!$this->checkout->isReadyToComplete($order)) {
             return $this->redirectToStep('cart' === $order->getCheckoutState() ? 'address' : 'shipping_payment', $draft);
         }
@@ -303,6 +341,12 @@ final class DraftOrderStepsController extends AbstractController
         ]);
         $form->handleRequest($request);
 
+        if (!$form->isSubmitted() && $this->checkout->recalculate($order)) {
+            // Prices or promotions changed since the draft was last modified: show the current totals.
+            $this->entityManager->flush();
+            $this->addFlash('info', 'tmonier_admin_order.totals_updated');
+        }
+
         $violations = $this->checkout->validate($order);
         if ($form->isSubmitted() && $form->isValid() && 0 === count($violations)) {
             /** @var array{notes: string|null, sendConfirmationEmail: bool, sendPaymentLink?: bool} $data */
@@ -310,7 +354,28 @@ final class DraftOrderStepsController extends AbstractController
             $notes = trim((string) $data['notes']);
             $order->setNotes('' === $notes ? null : $notes);
 
-            $result = $this->checkout->complete($draft, $data['sendConfirmationEmail'], $data['sendPaymentLink'] ?? false);
+            try {
+                $result = $this->checkout->complete($draft, $data['sendConfirmationEmail'], $data['sendPaymentLink'] ?? false);
+            } catch (\Throwable $exception) {
+                $this->logger?->error('The admin order could not be placed.', ['exception' => $exception]);
+                $this->addFlash('error', 'tmonier_admin_order.completion_failed');
+
+                return $this->redirectToStep('summary', $draft);
+            }
+
+            if (CompletionResult::NOT_A_DRAFT === $result->status) {
+                $this->addFlash('warning', 'tmonier_admin_order.already_placed');
+
+                return $this->redirectToRoute('sylius_admin_order_show', ['id' => $order->getId()]);
+            }
+
+            if (CompletionResult::CHANGED === $result->status) {
+                $this->addFlash('warning', null !== $result->removedPromotion
+                    ? ['message' => 'tmonier_admin_order.promotion_changed', 'parameters' => ['%promotion%' => $result->removedPromotion]]
+                    : 'tmonier_admin_order.total_changed');
+
+                return $this->redirectToStep('summary', $draft);
+            }
 
             $this->addFlash('success', ['message' => 'tmonier_admin_order.order_placed', 'parameters' => ['%number%' => (string) $order->getNumber()]]);
             if ($result->paymentLinkSent) {
@@ -343,8 +408,8 @@ final class DraftOrderStepsController extends AbstractController
             'add_item_form' => $this->createAddItemForm($order),
             'coupon_form' => $this->createCouponForm($order),
         ];
-        if ($this->isGranted(OrderAdjustmentVoter::MANUAL_DISCOUNT)) {
-            $forms += ['discount_form' => $this->createManualDiscountForm($order)];
+        if ($this->isGranted(OrderAdjustmentVoter::MANUAL_DISCOUNT) || null !== $this->draftOrderModifier->getManualDiscount($draft)) {
+            $forms += ['discount_form' => $this->createManualDiscountForm($draft)];
         }
 
         return $this->renderStep('items', $draft, array_map(static fn (FormInterface $form) => $form->createView(), $forms), $status);
@@ -358,7 +423,8 @@ final class DraftOrderStepsController extends AbstractController
             'draft' => $draft,
             'order' => $draft->getOrder(),
             'price_override_allowed' => $this->isGranted(OrderAdjustmentVoter::PRICE_OVERRIDE),
-            'manual_discount' => $this->draftOrderModifier->getManualDiscount($this->orderOf($draft)),
+            'manual_discount' => $this->draftOrderModifier->getManualDiscount($draft),
+            'manual_discount_allowed' => $this->isGranted(OrderAdjustmentVoter::MANUAL_DISCOUNT),
         ] + $parameters, $status);
     }
 
@@ -386,9 +452,10 @@ final class DraftOrderStepsController extends AbstractController
         ]);
     }
 
-    private function createManualDiscountForm(OrderInterface $order): FormInterface
+    private function createManualDiscountForm(AdminOrderCreationInterface $draft): FormInterface
     {
-        $discount = $this->draftOrderModifier->getManualDiscount($order);
+        $order = $this->orderOf($draft);
+        $discount = $this->draftOrderModifier->getManualDiscount($draft);
 
         return $this->createForm(ManualDiscountType::class, [
             'amount' => $discount['amount'] ?? null,
@@ -407,23 +474,31 @@ final class DraftOrderStepsController extends AbstractController
      */
     private function getAddressData(Request $request, OrderInterface $order): array
     {
+        // The order's own address entities are edited in place (no orphan address rows).
         $billing = $order->getBillingAddress();
         $shipping = $order->getShippingAddress();
+        $different = null !== $billing && null !== $shipping && !$this->sameAddress($billing, $shipping);
 
+        $source = null;
         $bookAddressId = $request->query->getInt('address');
-        if ($bookAddressId > 0) {
-            foreach ($this->getAddressBook($order) as $bookAddress) {
-                if ($bookAddress->getId() === $bookAddressId) {
-                    $billing = $this->copy($bookAddress);
-                    $shipping = null;
-                }
+        foreach ($bookAddressId > 0 ? $this->getAddressBook($order) : [] as $bookAddress) {
+            if ($bookAddress->getId() === $bookAddressId) {
+                $source = $bookAddress;
+                $different = false;
             }
         }
+        if (null === $billing && null === $source) {
+            $source = $this->getCustomer($order)?->getDefaultAddress();
+        }
 
-        $billing ??= $this->copy($this->getCustomer($order)?->getDefaultAddress());
-        $different = null !== $billing && null !== $shipping && !$this->sameAddress($billing, $shipping);
         $billing ??= $this->addressFactory->createNew();
-        $shipping = null !== $shipping && $different ? $shipping : $this->copy($billing);
+        if (null !== $source) {
+            $this->copyInto($source, $billing);
+        }
+        $shipping ??= $this->addressFactory->createNew();
+        if (!$different) {
+            $this->copyInto($billing, $shipping);
+        }
 
         if (null === $billing->getFirstName() && null === $billing->getLastName()) {
             $billing->setFirstName($this->getCustomer($order)?->getFirstName());
@@ -433,7 +508,7 @@ final class DraftOrderStepsController extends AbstractController
 
         return [
             'billingAddress' => $billing,
-            'shippingAddress' => $shipping ?? $this->addressFactory->createNew(),
+            'shippingAddress' => $shipping,
             'differentShippingAddress' => $different,
         ];
     }
@@ -459,13 +534,8 @@ final class DraftOrderStepsController extends AbstractController
         return $customer instanceof CustomerInterface ? $customer : null;
     }
 
-    private function copy(?AddressInterface $address): ?AddressInterface
+    private function copyInto(AddressInterface $address, AddressInterface $copy): void
     {
-        if (null === $address) {
-            return null;
-        }
-
-        $copy = $this->addressFactory->createNew();
         $copy->setFirstName($address->getFirstName());
         $copy->setLastName($address->getLastName());
         $copy->setPhoneNumber($address->getPhoneNumber());
@@ -476,8 +546,6 @@ final class DraftOrderStepsController extends AbstractController
         $copy->setCountryCode($address->getCountryCode());
         $copy->setProvinceCode($address->getProvinceCode());
         $copy->setProvinceName($address->getProvinceName());
-
-        return $copy;
     }
 
     private function sameAddress(AddressInterface $first, AddressInterface $second): bool

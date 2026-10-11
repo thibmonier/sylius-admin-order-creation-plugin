@@ -1,4 +1,9 @@
 tmonier_admin_order:
+    totals_updated: 'Han cambiado precios o promociones desde la última modificación: los totales se han recalculado.'
+    completion_failed: 'No se ha podido realizar el pedido (ha cambiado mientras tanto, por ejemplo el stock). Revíselo e inténtelo de nuevo.'
+    already_placed: 'Este borrador ya se ha realizado o eliminado.'
+    promotion_changed: 'La promoción «%promotion%» ya no se aplica: revise el pedido antes de realizarlo.'
+    total_changed: 'El total del pedido ha cambiado: revíselo antes de realizarlo.'
     draft_created: 'El pedido en borrador se ha creado.'
     draft_deleted: 'El pedido en borrador se ha eliminado.'
     reorder_impossible: 'Este pedido no se puede volver a pedir.'

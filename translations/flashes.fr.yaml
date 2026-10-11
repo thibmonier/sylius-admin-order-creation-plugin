@@ -1,4 +1,9 @@
 tmonier_admin_order:
+    totals_updated: 'Des prix ou des promotions ont changé depuis la dernière modification : les totaux ont été recalculés.'
+    completion_failed: "La commande n'a pas pu être passée (elle a changé entre-temps, par exemple le stock). Vérifiez-la puis réessayez."
+    already_placed: 'Ce brouillon a déjà été passé ou supprimé.'
+    promotion_changed: "La promotion « %promotion% » ne s'applique plus : vérifiez la commande avant de la passer."
+    total_changed: 'Le total de la commande a changé : vérifiez-la avant de la passer.'
     draft_created: 'La commande en préparation a été créée.'
     draft_deleted: 'La commande en préparation a été supprimée.'
     reorder_impossible: 'Cette commande ne peut pas être recommandée.'

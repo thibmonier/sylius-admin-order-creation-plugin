@@ -15,6 +15,9 @@ final class ManualDiscount
     /** Neutral order adjustment holding the requested amount (negative) and the reason (label). */
     public const REQUEST_ADJUSTMENT_TYPE = 'tmonier_admin_order_manual_discount';
 
+    /** Fixed label of the request adjustment: the reason is kept in the plugin table only. */
+    public const REQUEST_LABEL = 'manual_discount';
+
     /** Origin code of the distributed order promotion adjustments. */
     public const ORIGIN_CODE = 'tmonier_admin_order_manual_discount';
 

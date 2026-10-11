@@ -1,4 +1,9 @@
 tmonier_admin_order:
+    totals_updated: 'Preise oder Aktionen haben sich seit der letzten Änderung geändert: Die Summen wurden neu berechnet.'
+    completion_failed: 'Die Bestellung konnte nicht aufgegeben werden (sie wurde inzwischen geändert, z. B. der Bestand). Bitte prüfen Sie sie und versuchen Sie es erneut.'
+    already_placed: 'Dieser Entwurf wurde bereits aufgegeben oder gelöscht.'
+    promotion_changed: 'Die Aktion „%promotion%“ gilt nicht mehr: Bitte prüfen Sie die Bestellung, bevor Sie sie aufgeben.'
+    total_changed: 'Die Gesamtsumme der Bestellung hat sich geändert: Bitte prüfen Sie sie, bevor Sie sie aufgeben.'
     draft_created: 'Der Bestellentwurf wurde angelegt.'
     draft_deleted: 'Der Bestellentwurf wurde gelöscht.'
     reorder_impossible: 'Diese Bestellung kann nicht erneut bestellt werden.'

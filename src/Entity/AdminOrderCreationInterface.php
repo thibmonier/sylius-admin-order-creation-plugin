@@ -41,6 +41,11 @@ interface AdminOrderCreationInterface extends ResourceInterface
 
     public function isDraft(): bool;
 
+    /** Internal reason of the manual discount: kept here, never on the order (the shop API exposes adjustment labels). */
+    public function getManualDiscountReason(): ?string;
+
+    public function setManualDiscountReason(?string $manualDiscountReason): void;
+
     public function isConfirmationEmailSent(): bool;
 
     public function setConfirmationEmailSent(bool $confirmationEmailSent): void;

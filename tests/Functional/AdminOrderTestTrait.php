@@ -6,7 +6,14 @@ namespace Tests\Tmonier\SyliusAdminOrderCreationPlugin\Functional;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\ORM\EntityManagerInterface;
+use Sylius\Component\Addressing\Factory\ZoneFactoryInterface;
+use Sylius\Component\Addressing\Model\CountryInterface;
+use Sylius\Component\Addressing\Model\Scope;
+use Sylius\Component\Addressing\Model\ZoneInterface;
+use Sylius\Component\Core\Factory\PaymentMethodFactoryInterface;
 use Sylius\Component\Core\Model\AddressInterface;
+use Sylius\Component\Core\Model\TaxRateInterface;
+use Sylius\Component\Taxation\Model\TaxCategoryInterface;
 use Sylius\Component\Core\Model\AdminUserInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
@@ -36,11 +43,117 @@ trait AdminOrderTestTrait
 
     private KernelBrowser $client;
 
+    /** Codes of the deterministic test setup (the Sylius fixtures are random). */
+    private const COUNTRY = 'IS';
+
+    private const SHIPPING_METHOD = 'tmonier_courier';
+
+    private const SHIPPING_METHOD_NAME = 'Tmonier courier';
+
+    private const EXPRESS_SHIPPING_METHOD = 'tmonier_express';
+
+    private const PAYMENT_METHOD = 'tmonier_invoice';
+
+    private const TAX_CATEGORY = 'tmonier_standard';
+
     private function setUpClient(): void
     {
         $this->client = self::createClient();
         $this->client->disableReboot();
         $this->connection()->beginTransaction();
+        $this->setUpWorld();
+    }
+
+    /**
+     * Inside the rolled-back transaction: a country with its own zone, two shipping methods
+     * and an offline payment method for the channel, a 10% tax excluded from prices, and no
+     * fixture promotion running (their usage and dates are random).
+     */
+    private function setUpWorld(): void
+    {
+        $this->connection()->executeStatement('UPDATE sylius_promotion SET ends_at = :past', ['past' => '2000-01-01 00:00:00']);
+
+        $channel = $this->channel();
+        $country = $this->entityManager()->getRepository(CountryInterface::class)->findOneBy(['code' => self::COUNTRY]);
+        if (!$country instanceof CountryInterface) {
+            /** @var FactoryInterface<CountryInterface> $countryFactory */
+            $countryFactory = self::getContainer()->get('sylius.factory.country');
+            $country = $countryFactory->createNew();
+            $country->setCode(self::COUNTRY);
+            $this->entityManager()->persist($country);
+        }
+        $country->enable();
+        if (!$channel->getCountries()->isEmpty()) {
+            $channel->addCountry($country);
+        }
+
+        /** @var ZoneFactoryInterface<ZoneInterface> $zoneFactory */
+        $zoneFactory = self::getContainer()->get('sylius.factory.zone');
+        $zone = $zoneFactory->createWithMembers([self::COUNTRY]);
+        $zone->setCode('TMONIER_ZONE');
+        $zone->setName('Tmonier test zone');
+        $zone->setType(ZoneInterface::TYPE_COUNTRY);
+        $zone->setScope(Scope::ALL);
+        $this->entityManager()->persist($zone);
+
+        foreach ([self::SHIPPING_METHOD => [self::SHIPPING_METHOD_NAME, 700], self::EXPRESS_SHIPPING_METHOD => ['Tmonier express', 1500]] as $code => [$name, $amount]) {
+            /** @var FactoryInterface<ShippingMethodInterface> $shippingMethodFactory */
+            $shippingMethodFactory = self::getContainer()->get('sylius.factory.shipping_method');
+            $shippingMethod = $shippingMethodFactory->createNew();
+            $shippingMethod->setCode($code);
+            $shippingMethod->setCurrentLocale('en_US');
+            $shippingMethod->setFallbackLocale('en_US');
+            $shippingMethod->setName($name);
+            $shippingMethod->setZone($zone);
+            $shippingMethod->setCalculator('flat_rate');
+            $shippingMethod->setConfiguration([(string) $channel->getCode() => ['amount' => $amount]]);
+            $shippingMethod->setPosition('tmonier_courier' === $code ? -100 : -99);
+            $shippingMethod->addChannel($channel);
+            $shippingMethod->enable();
+            $this->entityManager()->persist($shippingMethod);
+        }
+
+        /** @var PaymentMethodFactoryInterface<PaymentMethodInterface> $paymentMethodFactory */
+        $paymentMethodFactory = self::getContainer()->get('sylius.factory.payment_method');
+        $paymentMethod = $paymentMethodFactory->createWithGateway('offline');
+        $paymentMethod->getGatewayConfig()?->setGatewayName('tmonier_offline');
+        $paymentMethod->setCode(self::PAYMENT_METHOD);
+        $paymentMethod->setCurrentLocale('en_US');
+        $paymentMethod->setFallbackLocale('en_US');
+        $paymentMethod->setName('Tmonier invoice');
+        $paymentMethod->setPosition(-100);
+        $paymentMethod->addChannel($channel);
+        $paymentMethod->setEnabled(true);
+        $this->entityManager()->persist($paymentMethod);
+
+        /** @var FactoryInterface<TaxCategoryInterface> $taxCategoryFactory */
+        $taxCategoryFactory = self::getContainer()->get('sylius.factory.tax_category');
+        $taxCategory = $taxCategoryFactory->createNew();
+        $taxCategory->setCode(self::TAX_CATEGORY);
+        $taxCategory->setName('Tmonier standard');
+        $this->entityManager()->persist($taxCategory);
+
+        /** @var FactoryInterface<TaxRateInterface> $taxRateFactory */
+        $taxRateFactory = self::getContainer()->get('sylius.factory.tax_rate');
+        $rate = $taxRateFactory->createNew();
+        $rate->setCode('tmonier_standard_10');
+        $rate->setName('Standard 10%');
+        $rate->setAmount(0.1);
+        $rate->setIncludedInPrice(false);
+        $rate->setCalculator('default');
+        $rate->setCategory($taxCategory);
+        $rate->setZone($zone);
+        $this->entityManager()->persist($rate);
+
+        $this->entityManager()->flush();
+    }
+
+    private function taxCategory(): TaxCategoryInterface
+    {
+        $category = $this->entityManager()->getRepository(TaxCategoryInterface::class)->findOneBy(['code' => self::TAX_CATEGORY]);
+        self::assertInstanceOf(TaxCategoryInterface::class, $category);
+
+        return $category;
     }
 
     private function tearDownClient(): void
@@ -96,6 +209,7 @@ trait AdminOrderTestTrait
         self::assertArrayHasKey($offset, $variants, 'The fixtures contain sellable variants.');
 
         $variant = $variants[$offset];
+        $variant->setTaxCategory($this->taxCategory());
         $variant->setTracked(true);
         $variant->setOnHand($onHand);
         $variant->setOnHold(0);
@@ -152,7 +266,7 @@ trait AdminOrderTestTrait
         $address->setStreet($street);
         $address->setCity('London');
         $address->setPostcode('NW1 6XE');
-        $address->setCountryCode('GB');
+        $address->setCountryCode(self::COUNTRY);
 
         return $address;
     }
@@ -166,7 +280,7 @@ trait AdminOrderTestTrait
             $prefix . '[street]' => $street,
             $prefix . '[city]' => 'Cambridge',
             $prefix . '[postcode]' => 'CB2 1TN',
-            $prefix . '[countryCode]' => 'GB',
+            $prefix . '[countryCode]' => self::COUNTRY,
         ];
     }
 

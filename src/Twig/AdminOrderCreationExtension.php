@@ -25,9 +25,17 @@ final class AdminOrderCreationExtension extends AbstractExtension
     {
         return [
             new TwigFunction('tmonier_admin_order_creation', $this->getCreation(...)),
-            new TwigFunction('tmonier_admin_order_manual_discount', $this->draftOrderModifier->getManualDiscount(...)),
+            new TwigFunction('tmonier_admin_order_manual_discount', $this->getManualDiscount(...)),
             new TwigFunction('tmonier_admin_order_can_reorder', $this->reorderer->canReorder(...)),
         ];
+    }
+
+    /** @return array{amount: int, reason: string}|null */
+    public function getManualDiscount(mixed $order): ?array
+    {
+        $creation = $this->getCreation($order);
+
+        return null !== $creation ? $this->draftOrderModifier->getManualDiscount($creation) : null;
     }
 
     public function getCreation(mixed $order): ?AdminOrderCreationInterface

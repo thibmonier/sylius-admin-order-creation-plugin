@@ -92,8 +92,8 @@ final class AdminOrderCreationFlowTest extends WebTestCase
         $crawler = $this->client->followRedirect();
         $form = $crawler->selectButton('Next: Summary')->form();
         $form->setValues([
-            'tmonier_admin_order_shipping_payment[shipment_0]' => 'dhl_express',
-            'tmonier_admin_order_shipping_payment[paymentMethod]' => 'bank_transfer',
+            'tmonier_admin_order_shipping_payment[shipment_0]' => self::EXPRESS_SHIPPING_METHOD,
+            'tmonier_admin_order_shipping_payment[paymentMethod]' => self::PAYMENT_METHOD,
         ]);
         $this->client->submit($form);
         self::assertResponseRedirects(sprintf('/admin/order-drafts/%d/summary', $orderId));
@@ -101,11 +101,11 @@ final class AdminOrderCreationFlowTest extends WebTestCase
         self::assertSame(OrderCheckoutStates::STATE_PAYMENT_SELECTED, $order->getCheckoutState());
         $shipment = $order->getShipments()->first();
         self::assertNotFalse($shipment);
-        self::assertSame('dhl_express', $shipment->getMethod()?->getCode());
+        self::assertSame(self::EXPRESS_SHIPPING_METHOD, $shipment->getMethod()?->getCode());
 
         // 5. Summary and completion
         $this->client->followRedirect();
-        self::assertSelectorTextContains('[data-test-summary-shipping-method]', 'DHL Express');
+        self::assertSelectorTextContains('[data-test-summary-shipping-method]', 'Tmonier express');
         self::assertCheckboxChecked('tmonier_admin_order_complete[sendConfirmationEmail]');
         $this->client->submitForm('Place order', [
             'tmonier_admin_order_complete[notes]' => 'Delivery before noon.',

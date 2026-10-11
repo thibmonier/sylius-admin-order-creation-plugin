@@ -1,4 +1,6 @@
 tmonier_admin_order:
+    order:
+        not_empty: "L'ordine non contiene articoli."
     channel:
         not_blank: 'Scegli un canale.'
     customer:
@@ -7,6 +9,7 @@ tmonier_admin_order:
     locale:
         not_in_channel: 'Questa lingua non è disponibile nel canale scelto.'
     item:
+        not_sellable: "Questo prodotto non può essere venduto nel canale dell'ordine (disattivato, fuori canale o senza prezzo)."
         variant_required: 'Scegli un prodotto.'
     discount:
         reason_required: 'Indica il motivo dello sconto.'

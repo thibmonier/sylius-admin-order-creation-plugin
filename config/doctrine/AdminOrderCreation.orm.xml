@@ -14,6 +14,7 @@
         <field name="adminName" column="admin_name" type="string" length="255" nullable="true" />
         <field name="createdAt" column="created_at" type="datetime_immutable" />
         <field name="completedAt" column="completed_at" type="datetime_immutable" nullable="true" />
+        <field name="manualDiscountReason" column="manual_discount_reason" type="string" length="255" nullable="true" />
         <field name="confirmationEmailSent" column="confirmation_email_sent" type="boolean" />
         <field name="paymentLinkSentAt" column="payment_link_sent_at" type="datetime_immutable" nullable="true" />
 

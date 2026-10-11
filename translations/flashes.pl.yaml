@@ -1,4 +1,9 @@
 tmonier_admin_order:
+    totals_updated: 'Ceny lub promocje zmieniły się od ostatniej modyfikacji: sumy zostały przeliczone.'
+    completion_failed: 'Nie udało się złożyć zamówienia (w międzyczasie się zmieniło, np. stan magazynowy). Sprawdź je i spróbuj ponownie.'
+    already_placed: 'Ten szkic został już złożony lub usunięty.'
+    promotion_changed: 'Promocja „%promotion%” już nie obowiązuje: sprawdź zamówienie przed jego złożeniem.'
+    total_changed: 'Suma zamówienia się zmieniła: sprawdź je przed złożeniem.'
     draft_created: 'Szkic zamówienia został utworzony.'
     draft_deleted: 'Szkic zamówienia został usunięty.'
     reorder_impossible: 'Tego zamówienia nie można zamówić ponownie.'

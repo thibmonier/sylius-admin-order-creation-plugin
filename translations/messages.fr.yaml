@@ -1,5 +1,7 @@
 tmonier_admin_order:
     ui:
+        discount_removal_only: 'Cette remise a été accordée par un administrateur habilité : vous pouvez seulement la retirer.'
+        remove_discount: 'Retirer la remise'
         no_method_available: "Aucun mode n'est disponible pour cette commande et cette adresse : vérifiez l'adresse ou la configuration des modes (zones, canal)."
         new_order: 'Nouvelle commande'
         new_order_subtitle: "Commande par téléphone ou en back-office pour le compte d'un client"
@@ -46,6 +48,7 @@ tmonier_admin_order:
         cannot_complete: 'La commande ne peut pas encore être passée'
         place_order: 'Passer la commande'
     form:
+        reset_price: 'Rétablir le prix catalogue'
         locale: Langue
         locale_placeholder: 'Langue par défaut du canal'
         locale_help: 'Langue des e-mails envoyés au client.'

@@ -30,14 +30,20 @@ interface DraftOrderCheckoutInterface
      */
     public function selectShippingAndPayment(OrderInterface $order, array $shippingMethods, ?PaymentMethodInterface $paymentMethod): void;
 
+    /** Not empty, and at the "payment selected / skipped" checkout state. */
     public function isReadyToComplete(OrderInterface $order): bool;
 
-    /** Runs the validation of the shop's last checkout step. */
+    /** Recalculates the draft (prices, promotions, taxes); returns true when its total or promotions changed. */
+    public function recalculate(OrderInterface $order): bool;
+
+    /** Runs the validation of the shop's last checkout step, plus "the order is not empty". */
     public function validate(OrderInterface $order): ConstraintViolationListInterface;
 
     /**
-     * Places the order, flushes, sends the requested e-mails then dispatches
-     * the "tmonier_admin_order.order_created" event.
+     * In a transaction holding a lock on the order row: checks the order is still a cart,
+     * recalculates it like the shop does before completion (promotions and total integrity)
+     * and, when nothing changed, places it. Then sends the requested e-mails and dispatches the
+     * "tmonier_admin_order.order_created" event (listener errors are logged, never thrown).
      */
     public function complete(AdminOrderCreationInterface $creation, bool $sendConfirmationEmail, bool $sendPaymentLink): CompletionResult;
 }

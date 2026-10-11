@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusAdminOrderCreationPlugin\Purger;
 
-use Doctrine\Persistence\ObjectManager;
+use Tmonier\SyliusAdminOrderCreationPlugin\Remover\DraftRemoverInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Repository\AdminOrderCreationRepositoryInterface;
 
 /**
  * Deletes abandoned admin drafts by batches: the cart (items, adjustments, addresses, payments
- * and shipments are cascaded by the core mapping) and the plugin record.
+ * and shipments are cascaded by the core mapping) and the plugin record. A draft placed while
+ * the purge runs is kept (see DraftRemover).
  */
 final class DraftPurger implements DraftPurgerInterface
 {
@@ -17,7 +18,7 @@ final class DraftPurger implements DraftPurgerInterface
 
     public function __construct(
         private readonly AdminOrderCreationRepositoryInterface $repository,
-        private readonly ObjectManager $entityManager,
+        private readonly DraftRemoverInterface $remover,
     ) {
     }
 
@@ -31,17 +32,15 @@ final class DraftPurger implements DraftPurgerInterface
         $purged = 0;
         do {
             $drafts = $this->repository->findDraftsNotModifiedSince($modifiedBefore, self::BATCH_SIZE);
+            $removedInBatch = 0;
             foreach ($drafts as $draft) {
-                $order = $draft->getOrder();
-                $this->entityManager->remove($draft);
-                if (null !== $order) {
-                    $this->entityManager->remove($order);
+                if ($this->remover->remove($draft)) {
+                    ++$removedInBatch;
                 }
             }
 
-            $this->entityManager->flush();
-            $purged += count($drafts);
-        } while (self::BATCH_SIZE === count($drafts));
+            $purged += $removedInBatch;
+        } while (self::BATCH_SIZE === count($drafts) && $removedInBatch > 0);
 
         return $purged;
     }

@@ -1,5 +1,7 @@
 tmonier_admin_order:
     ui:
+        discount_removal_only: 'Este descuento lo concedió un administrador autorizado: solo puede eliminarlo.'
+        remove_discount: 'Eliminar el descuento'
         no_method_available: 'No hay ningún método disponible para este pedido y esta dirección: compruebe la dirección o la configuración de los métodos (zonas, canal).'
         new_order: 'Nuevo pedido'
         new_order_subtitle: 'Pedido telefónico o de back-office en nombre de un cliente'
@@ -46,6 +48,7 @@ tmonier_admin_order:
         cannot_complete: 'El pedido aún no se puede realizar'
         place_order: 'Realizar el pedido'
     form:
+        reset_price: 'Restaurar el precio de catálogo'
         locale: Idioma
         locale_placeholder: 'Idioma por defecto del canal'
         locale_help: 'Idioma de los e-mails enviados al cliente.'

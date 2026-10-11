@@ -7,6 +7,7 @@ namespace Tmonier\SyliusAdminOrderCreationPlugin\Form\Type;
 use Sylius\Bundle\MoneyBundle\Form\Type\MoneyType;
 use Sylius\Component\Core\Model\OrderInterface;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FormType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -17,6 +18,7 @@ use Symfony\Component\Validator\Constraints\Range;
 
 /**
  * Quantities (0 removes the item) and, when allowed, custom unit prices of the draft items.
+ * Without the permission, an existing custom price can only be reset to the catalog price.
  * One "item_<id>" sub-form per order item.
  */
 final class ItemsType extends AbstractType
@@ -48,6 +50,11 @@ final class ItemsType extends AbstractType
                     'currency' => $order->getCurrencyCode(),
                     'data' => $item->isImmutable() ? $item->getUnitPrice() : null,
                     'constraints' => [new PositiveOrZero()],
+                ]);
+            } elseif ($item->isImmutable()) {
+                $itemForm->add('resetPrice', CheckboxType::class, [
+                    'label' => 'tmonier_admin_order.form.reset_price',
+                    'required' => false,
                 ]);
             }
 

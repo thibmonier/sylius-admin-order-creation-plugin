@@ -8,8 +8,8 @@ use Sylius\Component\Core\Model\AdminUserInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
-use Sylius\Component\Core\Model\ProductInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Checker\SellableVariantChecker;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderFactoryInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderModifierInterface;
 use Webmozart\Assert\Assert;
@@ -19,6 +19,7 @@ final class Reorderer implements ReordererInterface
     public function __construct(
         private readonly DraftOrderFactoryInterface $draftOrderFactory,
         private readonly DraftOrderModifierInterface $draftOrderModifier,
+        private readonly SellableVariantChecker $sellableVariantChecker = new SellableVariantChecker(),
     ) {
     }
 
@@ -62,7 +63,7 @@ final class Reorderer implements ReordererInterface
         $skipped = [];
         foreach ($order->getItems() as $item) {
             $variant = $item->getVariant();
-            if (!$variant instanceof ProductVariantInterface || !$this->isSold($variant, $channel)) {
+            if (!$variant instanceof ProductVariantInterface || !$this->sellableVariantChecker->isSellable($variant, $channel)) {
                 $skipped[] = trim(sprintf('%s %s', (string) $item->getProductName(), (string) $item->getVariantName()));
 
                 continue;
@@ -74,15 +75,4 @@ final class Reorderer implements ReordererInterface
         return new ReorderResult($draft, $skipped);
     }
 
-    private function isSold(ProductVariantInterface $variant, ChannelInterface $channel): bool
-    {
-        $product = $variant->getProduct();
-
-        return $variant->isEnabled() &&
-            $product instanceof ProductInterface &&
-            $product->isEnabled() &&
-            $product->hasChannel($channel) &&
-            null !== $variant->getChannelPricingForChannel($channel)?->getPrice()
-        ;
-    }
 }

@@ -4,19 +4,22 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusAdminOrderCreationPlugin\Checkout;
 
-use Doctrine\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Bundle\CoreBundle\Mailer\OrderEmailManagerInterface;
+use Sylius\Bundle\CoreBundle\Order\Checker\OrderPromotionsIntegrityCheckerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\OrderCheckoutStates;
 use Sylius\Component\Core\OrderCheckoutTransitions;
+use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
+use Symfony\Contracts\Translation\TranslatorInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Event\AdminOrderCreatedEvent;
 use Tmonier\SyliusAdminOrderCreationPlugin\Mailer\PaymentLinkEmailManagerInterface;
@@ -29,10 +32,13 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
     public function __construct(
         private readonly StateMachineInterface $stateMachine,
         private readonly ValidatorInterface $validator,
-        private readonly ObjectManager $entityManager,
+        private readonly EntityManagerInterface $entityManager,
+        private readonly OrderPromotionsIntegrityCheckerInterface $promotionsIntegrityChecker,
+        private readonly OrderRowLock $orderRowLock,
         private readonly OrderEmailManagerInterface $orderEmailManager,
         private readonly PaymentLinkEmailManagerInterface $paymentLinkEmailManager,
         private readonly EventDispatcherInterface $eventDispatcher,
+        private readonly TranslatorInterface $translator,
         private readonly ClockInterface $clock,
         private readonly LoggerInterface $logger,
     ) {
@@ -79,13 +85,27 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
 
     public function isReadyToComplete(OrderInterface $order): bool
     {
-        return in_array($order->getCheckoutState(), [OrderCheckoutStates::STATE_PAYMENT_SELECTED, OrderCheckoutStates::STATE_PAYMENT_SKIPPED], true) &&
-            $this->can($order, OrderCheckoutTransitions::TRANSITION_COMPLETE);
+        return !$order->getItems()->isEmpty()
+            && in_array($order->getCheckoutState(), [OrderCheckoutStates::STATE_PAYMENT_SELECTED, OrderCheckoutStates::STATE_PAYMENT_SKIPPED], true)
+            && $this->can($order, OrderCheckoutTransitions::TRANSITION_COMPLETE);
+    }
+
+    public function recalculate(OrderInterface $order): bool
+    {
+        $oldTotal = $order->getTotal();
+
+        return null !== $this->promotionsIntegrityChecker->check($order) || $order->getTotal() !== $oldTotal;
     }
 
     public function validate(OrderInterface $order): ConstraintViolationListInterface
     {
-        return $this->validator->validate($order, null, self::VALIDATION_GROUPS);
+        $violations = $this->validator->validate($order, null, self::VALIDATION_GROUPS);
+        if ($order->getItems()->isEmpty()) {
+            $message = $this->translator->trans('tmonier_admin_order.order.not_empty', [], 'validators');
+            $violations->add(new ConstraintViolation($message, null, [], $order, 'items', $order->getItems()));
+        }
+
+        return $violations;
     }
 
     public function complete(AdminOrderCreationInterface $creation, bool $sendConfirmationEmail, bool $sendPaymentLink): CompletionResult
@@ -94,9 +114,36 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
         Assert::notNull($order);
         Assert::true($this->isReadyToComplete($order), 'The order is not ready to be completed.');
 
-        $this->apply($order, OrderCheckoutTransitions::TRANSITION_COMPLETE);
-        $creation->setCompletedAt($this->clock->now());
-        $this->entityManager->flush();
+        $connection = $this->entityManager->getConnection();
+        $connection->beginTransaction();
+
+        try {
+            if (!$this->orderRowLock->lockDraft($order)) {
+                $connection->rollBack();
+
+                return CompletionResult::notADraft();
+            }
+
+            $oldTotal = $order->getTotal();
+            $removedPromotion = $this->promotionsIntegrityChecker->check($order);
+            if (null !== $removedPromotion || $order->getTotal() !== $oldTotal) {
+                $this->entityManager->flush();
+                $connection->commit();
+
+                return CompletionResult::changed($removedPromotion?->getName());
+            }
+
+            $this->apply($order, OrderCheckoutTransitions::TRANSITION_COMPLETE);
+            $creation->setCompletedAt($this->clock->now());
+            $this->entityManager->flush();
+            $connection->commit();
+        } catch (\Throwable $exception) {
+            if ($connection->isTransactionActive()) {
+                $connection->rollBack();
+            }
+
+            throw $exception;
+        }
 
         $emailFailed = false;
         $confirmationSent = false;
@@ -115,9 +162,13 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
         $creation->setPaymentLinkSentAt($paymentLinkSent ? $this->clock->now() : null);
         $this->entityManager->flush();
 
-        $this->eventDispatcher->dispatch(new AdminOrderCreatedEvent($order, $creation), AdminOrderCreatedEvent::NAME);
+        try {
+            $this->eventDispatcher->dispatch(new AdminOrderCreatedEvent($order, $creation), AdminOrderCreatedEvent::NAME);
+        } catch (\Throwable $exception) {
+            $this->logger->error(sprintf('A listener of "%s" failed for the order "%s".', AdminOrderCreatedEvent::NAME, (string) $order->getNumber()), ['exception' => $exception]);
+        }
 
-        return new CompletionResult($confirmationSent, $paymentLinkSent, $emailFailed);
+        return CompletionResult::placed($confirmationSent, $paymentLinkSent, $emailFailed);
     }
 
     /** The order is placed whatever happens: a failing mailer only produces a warning. */

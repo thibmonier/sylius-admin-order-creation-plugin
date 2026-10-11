@@ -52,7 +52,9 @@ final class ProductVariantAutocompleteType extends AbstractType
                     if (is_string($channelCode)) {
                         $queryBuilder
                             ->innerJoin('product.channels', 'channel')
+                            ->innerJoin('entity.channelPricings', 'channelPricing', 'WITH', 'channelPricing.channelCode = :channelCode')
                             ->andWhere('channel.code = :channelCode')
+                            ->andWhere('channelPricing.price IS NOT NULL')
                             ->setParameter('channelCode', $channelCode)
                         ;
                     }

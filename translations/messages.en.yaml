@@ -1,5 +1,7 @@
 tmonier_admin_order:
     ui:
+        discount_removal_only: 'This discount was given by an administrator allowed to: you can only remove it.'
+        remove_discount: 'Remove the discount'
         no_method_available: 'No method is available for this order and address: check the address or the method configuration (zones, channel).'
         new_order: 'New order'
         new_order_subtitle: 'Phone or back-office order on behalf of a customer'
@@ -46,6 +48,7 @@ tmonier_admin_order:
         cannot_complete: 'The order cannot be placed yet'
         place_order: 'Place order'
     form:
+        reset_price: 'Restore the catalog price'
         locale: Language
         locale_placeholder: 'Default language of the channel'
         locale_help: 'Language of the e-mails sent to the customer.'

@@ -20,6 +20,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderFactoryInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Form\Model\StartOrderData;
 use Tmonier\SyliusAdminOrderCreationPlugin\Form\Type\StartOrderType;
+use Tmonier\SyliusAdminOrderCreationPlugin\Remover\DraftRemoverInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Reorder\ReordererInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Repository\AdminOrderCreationRepositoryInterface;
 
@@ -43,6 +44,7 @@ final class DraftOrderController extends AbstractController
         private readonly DraftOrderFactoryInterface $draftOrderFactory,
         private readonly ReordererInterface $reorderer,
         private readonly EntityManagerInterface $entityManager,
+        private readonly DraftRemoverInterface $draftRemover,
     ) {
     }
 
@@ -87,12 +89,11 @@ final class DraftOrderController extends AbstractController
         $draft = $this->getDraft($id);
         $this->assertCsrfToken($request, self::draftCsrfTokenId('delete', $id));
 
-        $order = $draft->getOrder();
-        $this->entityManager->remove($draft);
-        if (null !== $order) {
-            $this->entityManager->remove($order);
+        if (!$this->draftRemover->remove($draft)) {
+            $this->addFlash('warning', 'tmonier_admin_order.already_placed');
+
+            return $this->redirectToRoute('tmonier_admin_order_draft_index');
         }
-        $this->entityManager->flush();
         $this->addFlash('success', 'tmonier_admin_order.draft_deleted');
 
         return $this->redirectToRoute('tmonier_admin_order_draft_index');

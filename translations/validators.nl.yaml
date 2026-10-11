@@ -1,4 +1,6 @@
 tmonier_admin_order:
+    order:
+        not_empty: 'De bestelling bevat geen artikelen.'
     channel:
         not_blank: 'Kies een kanaal.'
     customer:
@@ -7,6 +9,7 @@ tmonier_admin_order:
     locale:
         not_in_channel: 'Deze taal is niet beschikbaar in het gekozen kanaal.'
     item:
+        not_sellable: 'Dit product kan niet worden verkocht in het kanaal van de bestelling (uitgeschakeld, niet in het kanaal of zonder prijs).'
         variant_required: 'Kies een product.'
     discount:
         reason_required: 'Geef een reden voor de korting op.'
