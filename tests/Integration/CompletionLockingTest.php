@@ -138,6 +138,11 @@ final class CompletionLockingTest extends WebTestCase
         $promotion->setCode($code . '_PROMO');
         $promotion->setName('Locking test');
         $promotion->setCouponBased(true);
+        // The fixture promotions stay active in this committed test: make this one win whatever they are.
+        $promotion->setExclusive(true);
+        $promotion->setPriority(10000);
+        $promotion->setStartsAt(null);
+        $promotion->setEndsAt(null);
         $promotion->addChannel($this->channel());
         $action = $actionFactory->createNew();
         $action->setType('order_fixed_discount');

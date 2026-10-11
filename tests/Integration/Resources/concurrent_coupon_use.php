@@ -21,6 +21,8 @@ if ('customer' === $mode) {
     $pdo->prepare("INSERT INTO sylius_order (channel_id, customer_id, promotion_coupon_id, number, state, checkout_state, payment_state, shipping_state, currency_code, locale_code, total, items_total, adjustments_total, created_by_guest, created_at, updated_at, checkout_completed_at) VALUES (?, ?, ?, ?, 'new', 'completed', 'awaiting_payment', 'ready', 'USD', 'en_US', 1000, 1000, 0, 1, NOW(), NOW(), NOW())")
         ->execute([$channelId, $customerId, $couponId, $number]);
 }
-$pdo->prepare('UPDATE sylius_promotion_coupon SET used = used + 1, version = version + 1 WHERE id = ?')->execute([$couponId]);
+// The coupon "version" column only exists since Sylius 2.3.
+$versioned = (bool) $pdo->query("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'sylius_promotion_coupon' AND COLUMN_NAME = 'version'")->fetchColumn();
+$pdo->prepare(sprintf('UPDATE sylius_promotion_coupon SET used = used + 1%s WHERE id = ?', $versioned ? ', version = version + 1' : ''))->execute([$couponId]);
 $pdo->commit();
 echo "committed\n";
