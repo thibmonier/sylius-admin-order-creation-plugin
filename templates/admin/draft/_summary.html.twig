@@ -44,7 +44,7 @@
             {% endfor %}
             {% if order.promotionCoupon is not null %}
                 <tr class="text-secondary">
-                    <td class="ps-4">{{ 'sylius.ui.coupon_code'|trans }}</td>
+                    <td class="ps-4">{{ 'sylius.ui.coupon'|trans }}</td>
                     <td class="text-end" data-test-draft-coupon>{{ order.promotionCoupon.code }}</td>
                 </tr>
             {% endif %}

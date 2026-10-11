@@ -1,6 +1,10 @@
 {% import '@SyliusAdmin/shared/helper/money.html.twig' as money %}
 
 {% set items_form = ctx.items_form %}
+{% form_theme items_form '@SyliusAdmin/shared/form_theme.html.twig' %}
+{% form_theme ctx.add_item_form '@SyliusAdmin/shared/form_theme.html.twig' %}
+{% form_theme ctx.coupon_form '@SyliusAdmin/shared/form_theme.html.twig' %}
+{% if ctx.discount_form is defined %}{% form_theme ctx.discount_form '@SyliusAdmin/shared/form_theme.html.twig' %}{% endif %}
 {% set currency = order.currencyCode %}
 
 <div class="card mb-3" data-test-draft-items>
@@ -102,7 +106,7 @@
 <div class="row row-cards mb-3">
     <div class="col-md-6">
         <div class="card h-100" data-test-coupon>
-            <div class="card-header"><h3 class="card-title">{{ 'sylius.ui.coupon_code'|trans }}</h3></div>
+            <div class="card-header"><h3 class="card-title">{{ 'sylius.ui.coupon'|trans }}</h3></div>
             <div class="card-body">
                 {{ form_start(ctx.coupon_form, {attr: {novalidate: 'novalidate'}}) }}
                 {{ form_errors(ctx.coupon_form) }}

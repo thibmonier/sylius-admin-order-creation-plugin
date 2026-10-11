@@ -1,6 +1,7 @@
 {% from '@SyliusAdmin/shared/helper/address.html.twig' import address %}
 
 {% set form = ctx.form %}
+{% form_theme form '@SyliusAdmin/shared/form_theme.html.twig' %}
 
 {% if ctx.address_book is not empty %}
     <div class="card mb-3" data-test-address-book>

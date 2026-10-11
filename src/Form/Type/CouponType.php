@@ -14,7 +14,7 @@ final class CouponType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder->add('code', TextType::class, [
-            'label' => 'sylius.ui.coupon_code',
+            'label' => 'sylius.ui.coupon',
             'required' => false,
             'help' => 'tmonier_admin_order.form.coupon_help',
             'constraints' => [new Length(max: 255)],

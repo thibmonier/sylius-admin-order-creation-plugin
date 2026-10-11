@@ -1,4 +1,5 @@
 {% set form = hookable_metadata.context.form %}
+{% form_theme form '@SyliusAdmin/shared/form_theme.html.twig' %}
 
 {{ form_start(form, {attr: {novalidate: 'novalidate', 'data-test-start-form': ''}}) }}
 <div class="row row-cards">

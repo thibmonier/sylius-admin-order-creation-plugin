@@ -1,4 +1,5 @@
 {% set form = ctx.form %}
+{% form_theme form '@SyliusAdmin/shared/form_theme.html.twig' %}
 
 {{ form_start(form, {attr: {novalidate: 'novalidate', 'data-test-shipping-payment-form': ''}}) }}
 <div class="card mb-3">
