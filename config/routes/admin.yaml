@@ -1,0 +1,100 @@
+tmonier_admin_order_draft_index:
+    path: /order-drafts
+    methods: [GET]
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft::indexAction
+
+tmonier_admin_order_draft_start:
+    path: /order-drafts/new
+    methods: [GET, POST]
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft::startAction
+
+tmonier_admin_order_draft_delete:
+    path: /order-drafts/{id}/delete
+    methods: [POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft::deleteAction
+
+tmonier_admin_order_reorder:
+    path: /orders/{id}/reorder
+    methods: [POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft::reorderAction
+
+tmonier_admin_order_draft_items:
+    path: /order-drafts/{id}/items
+    methods: [GET]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft_steps::itemsAction
+
+tmonier_admin_order_draft_item_add:
+    path: /order-drafts/{id}/items/add
+    methods: [POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft_steps::addItemAction
+
+tmonier_admin_order_draft_items_update:
+    path: /order-drafts/{id}/items/update
+    methods: [POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft_steps::updateItemsAction
+
+tmonier_admin_order_draft_item_remove:
+    path: /order-drafts/{id}/items/{itemId}/remove
+    methods: [POST]
+    requirements:
+        id: '\d+'
+        itemId: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft_steps::removeItemAction
+
+tmonier_admin_order_draft_manual_discount:
+    path: /order-drafts/{id}/manual-discount
+    methods: [POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft_steps::manualDiscountAction
+
+tmonier_admin_order_draft_coupon:
+    path: /order-drafts/{id}/coupon
+    methods: [POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft_steps::couponAction
+
+tmonier_admin_order_draft_address:
+    path: /order-drafts/{id}/address
+    methods: [GET, POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft_steps::addressAction
+
+tmonier_admin_order_draft_shipping_payment:
+    path: /order-drafts/{id}/shipping-payment
+    methods: [GET, POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft_steps::shippingPaymentAction
+
+tmonier_admin_order_draft_summary:
+    path: /order-drafts/{id}/summary
+    methods: [GET, POST]
+    requirements:
+        id: '\d+'
+    defaults:
+        _controller: tmonier_admin_order.controller.admin.draft_steps::summaryAction

@@ -1,0 +1,8 @@
+# Import this file from your application's config/routes:
+#
+# tmonier_sylius_admin_order_creation:
+#     resource: "@TmonierSyliusAdminOrderCreationPlugin/config/routes.yaml"
+
+tmonier_admin_order_admin:
+    resource: "@TmonierSyliusAdminOrderCreationPlugin/config/routes/admin.yaml"
+    prefix: '/%sylius_admin.path_name%'
