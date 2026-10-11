@@ -37,7 +37,10 @@ Local env overrides (gitignored): `compose.override.yml` (MySQL published on 332
   before taxes): distributes the neutral request adjustment into `order_promotion` unit
   adjustments with origin code `tmonier_admin_order_manual_discount`.
 - `src/Checkout/DraftOrderCheckout` — `sylius_order_checkout` transitions, validation groups
-  `sylius` + `sylius_checkout_complete`, e-mails, `tmonier_admin_order.order_created` event.
+  `sylius` + `sylius_checkout_complete` (+ not empty); completion in a transaction with
+  `OrderRowLock` and the shop's promotions/total integrity check; e-mails; event.
+- `src/Remover` — `DraftRemover` (locked deletion) and the decorated core `ExpiredCartsRemover`
+  that skips drafts. The manual discount reason lives in the plugin table only.
 - `src/Reorder`, `src/Purger` + `src/Command/PurgeDraftsCommand`, `src/Mailer` (payment link).
 - `src/Controller/Admin` — `DraftOrderController` (index, start, delete, reorder) and
   `DraftOrderStepsController` (items, address, shipping_payment, summary). Routes use the
@@ -57,4 +60,6 @@ Local env overrides (gitignored): `compose.override.yml` (MySQL published on 332
   that every key used in templates and PHP exists). Clear the cache after adding a file.
 - Functional tests run in a transaction rolled back after each test; the entity manager is
   reset after every client request: reload entities (`reloadOrder()`) before asserting.
-  Fixture shipping methods only serve the WORLD zone (use GB addresses), taxes only US.
+  `setUpWorld()` creates the country (IS), zone, shipping / payment methods and 10% tax used by
+  every test and ends the fixture promotions: never rely on fixture methods, zones, taxes,
+  promotions or order states.

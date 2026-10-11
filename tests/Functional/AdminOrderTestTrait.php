@@ -12,8 +12,6 @@ use Sylius\Component\Addressing\Model\Scope;
 use Sylius\Component\Addressing\Model\ZoneInterface;
 use Sylius\Component\Core\Factory\PaymentMethodFactoryInterface;
 use Sylius\Component\Core\Model\AddressInterface;
-use Sylius\Component\Core\Model\TaxRateInterface;
-use Sylius\Component\Taxation\Model\TaxCategoryInterface;
 use Sylius\Component\Core\Model\AdminUserInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
@@ -23,6 +21,8 @@ use Sylius\Component\Core\Model\PaymentMethodInterface;
 use Sylius\Component\Core\Model\ProductVariantInterface;
 use Sylius\Component\Core\Model\ShippingMethodInterface;
 use Sylius\Component\Core\Model\ShopUserInterface;
+use Sylius\Component\Core\Model\TaxRateInterface;
+use Sylius\Component\Taxation\Model\TaxCategoryInterface;
 use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\DraftOrderCheckoutInterface;
@@ -296,6 +296,28 @@ trait AdminOrderTestTrait
         return $draft;
     }
 
+    /** A draft at the summary step: addresses, first shipping and payment methods. */
+    private function prepareDraftReadyToComplete(string $email, ?AdminUserInterface $admin = null): int
+    {
+        $draft = $this->createDraft($this->createCustomer($email), $admin);
+        $order = $draft->getOrder();
+        self::assertNotNull($order);
+        $order->setBillingAddress($this->createAddress('Grace', 'Hopper', '1 Main Street'));
+        $order->setShippingAddress($this->createAddress('Grace', 'Hopper', '1 Main Street'));
+        $this->checkout()->address($order);
+        $shipment = $order->getShipments()->first();
+        self::assertNotFalse($shipment);
+        $method = $shipment->getMethod();
+        self::assertInstanceOf(\Sylius\Component\Core\Model\ShippingMethodInterface::class, $method);
+        $paymentMethod = $order->getLastPayment()?->getMethod();
+        self::assertInstanceOf(\Sylius\Component\Core\Model\PaymentMethodInterface::class, $paymentMethod);
+        $this->checkout()->selectShippingAndPayment($order, [0 => $method], $paymentMethod);
+        $this->entityManager()->flush();
+        self::assertTrue($this->checkout()->isReadyToComplete($order));
+
+        return $this->orderIdOf($draft);
+    }
+
     /** Builds and places an order through the plugin services (address, first methods, complete). */
     private function placeAdminOrder(CustomerInterface $customer, ?AdminUserInterface $admin = null, bool $sendConfirmationEmail = false): OrderInterface
     {
@@ -417,6 +439,15 @@ trait AdminOrderTestTrait
         $entityManager = self::getContainer()->get('doctrine.orm.entity_manager');
 
         return $entityManager;
+    }
+
+    /** @param array<string, mixed>|list<mixed> $parameters */
+    private function fetchInt(string $sql, array $parameters = []): int
+    {
+        $value = $this->connection()->fetchOne($sql, $parameters);
+        self::assertIsNumeric($value);
+
+        return (int) $value;
     }
 
     private function connection(): Connection

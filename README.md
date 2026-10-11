@@ -120,11 +120,31 @@ The `AdminOrderCreation` resource can be extended like any Sylius resource
 - **Custom prices** set the item unit price and flag the item as *immutable*, the core flag
   that tells the price recalculator to keep it. The catalog price stays visible (struck
   through). Clearing the field restores the catalog price.
-- **Manual discount**: stored as a neutral order adjustment (requested amount and internal
-  reason, not counted in the totals). A plugin order processor running after the promotions
+- **Manual discount**: the requested amount is stored as a neutral order adjustment (not
+  counted in the totals, fixed label); the internal reason is stored in the plugin table only,
+  never on the order (the shop API exposes adjustment labels). A plugin order processor running after the promotions
   and before the taxes spreads it over the units as regular *order promotion* adjustments
   labelled "Discount" (origin code `tmonier_admin_order_manual_discount`), capped to the items
   total. The minimum price of variants is not enforced for this administrator decision.
+- **Changing a draft after the methods were chosen** (items, prices, coupon, discount) sends it
+  back to the "addressed" checkout state: shipping and payment are confirmed again. Empty
+  drafts cannot be placed.
+- **Placement** runs in a transaction holding a lock on the order row: the state is read again
+  (a double click or a concurrent deletion never places or deletes twice), the draft is
+  recalculated with the shop's integrity check (`sylius.checker.order.promotions_integrity` and
+  the total) and, if a promotion no longer applies or the total changed (expired promotion,
+  coupon used up by other orders, new price), the admin is sent back to the summary with a
+  warning. A coupon whose promotion no longer applies is taken off the order. The summary page
+  also recalculates the draft when it is displayed.
+- **Products**: only enabled variants of enabled products sold in the channel with a price
+  there can be added (search and server-side check).
+- **Disabled features**: when `allow_price_override` or `allow_manual_discount` is turned off,
+  the custom prices or discount of the existing drafts are removed the next time the draft is
+  opened. An administrator without `adjustments_role` cannot set them but can remove the ones
+  given by an authorised administrator.
+- **Drafts and expired carts**: the core `sylius:remove-expired-carts` remover is decorated to
+  leave the drafts alone; `tmonier:admin-order:purge-drafts` handles their lifetime. Deletion
+  and purge lock the order row and only delete drafts still in the cart state.
 - **Checkout**: the plugin applies the `sylius_order_checkout` transitions (`address`,
   `select_shipping`, `select_payment`, `complete`) through the state machine; the core
   workflow listeners do the rest (recalculation, skipped steps, number, token, inventory hold,
@@ -166,9 +186,6 @@ The building blocks are services: `DraftOrderFactoryInterface`, `DraftOrderModif
 
 ## Limitations
 
-- The core `sylius:remove-expired-carts` command also deletes drafts not modified for
-  `sylius_order.expiration.cart` (2 days by default). Raise that setting if drafts must live
-  longer.
 - Admin orders keep the core "created by guest" flag (also for customers with a shop account):
   the orders grid shows the guest icon. The order is still in the customer's account history.
 - Adding the same variant twice merges the lines (core behaviour), including into a line with
@@ -183,18 +200,31 @@ The building blocks are services: `DraftOrderFactoryInterface`, `DraftOrderModif
 ## Development
 
 ```bash
+cp compose.override.dist.yml compose.override.yml   # publishes MySQL on 3306 (edit the ports if needed)
 docker compose up -d mysql mailhog
 composer install
 (cd vendor/sylius/test-application && yarn install && yarn build)
-vendor/bin/console doctrine:database:create
-vendor/bin/console doctrine:migrations:migrate -n
-vendor/bin/console sylius:fixtures:load -n
+
+# The MySQL container has no root password: point both environments at it.
+echo 'DATABASE_URL=mysql://root@127.0.0.1:3306/tmonier_sylius_admin_order_creation_%kernel.environment%' > tests/TestApplication/.env.local
+cp tests/TestApplication/.env.local tests/TestApplication/.env.test.local
+
+for env in dev test; do
+    APP_ENV=$env vendor/bin/console doctrine:database:create --if-not-exists
+    APP_ENV=$env vendor/bin/console doctrine:migrations:migrate -n
+    APP_ENV=$env vendor/bin/console sylius:fixtures:load -n
+done
 
 vendor/bin/phpunit --testsuite unit
-APP_ENV=test vendor/bin/phpunit --testsuite non-unit   # needs a test database with fixtures
+vendor/bin/phpunit --testsuite non-unit   # functional + integration, on the test database
 vendor/bin/phpstan analyse
 vendor/bin/ecs check
 ```
+
+PHP needs more than 128 MB to compile the test container: prefix the console and PHPStan
+commands with `php -d memory_limit=2G` if your `memory_limit` is lower. The tests create the
+country, zone, shipping and payment methods and tax rate they need inside a transaction rolled
+back after each test, so they do not depend on the random Sylius fixtures.
 
 ## License
 

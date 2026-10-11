@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace Tmonier\SyliusAdminOrderCreationPlugin\Remover;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\OrderRowLock;
+use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\OrderRowLockInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
 
 final class DraftRemover implements DraftRemoverInterface
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
-        private readonly OrderRowLock $orderRowLock,
+        private readonly OrderRowLockInterface $orderRowLock,
     ) {
     }
 

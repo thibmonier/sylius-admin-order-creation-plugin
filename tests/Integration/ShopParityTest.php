@@ -4,12 +4,10 @@ declare(strict_types=1);
 
 namespace Tests\Tmonier\SyliusAdminOrderCreationPlugin\Integration;
 
-use Sylius\Component\Addressing\Model\ZoneInterface;
 use Sylius\Component\Core\Model\AdjustmentInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PromotionCouponInterface;
 use Sylius\Component\Core\Model\PromotionInterface;
-use Sylius\Component\Core\Model\TaxRateInterface;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Component\Promotion\Model\PromotionActionInterface;
 use Sylius\Component\Shipping\Model\ShippingMethodInterface;
@@ -214,7 +212,6 @@ final class ShopParityTest extends WebTestCase
         $this->entityManager()->persist($promotion);
         $this->entityManager()->flush();
     }
-
 
     /** @return list<string> */
     private function promotionCodes(OrderInterface $order): array

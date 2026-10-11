@@ -6,12 +6,15 @@ namespace Tests\Tmonier\SyliusAdminOrderCreationPlugin\Unit\Draft;
 
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\OrderItem;
 use Sylius\Component\Core\Model\OrderItemInterface;
 use Sylius\Component\Core\Model\Promotion;
 use Sylius\Component\Core\Model\PromotionCoupon;
 use Sylius\Component\Core\Model\PromotionCouponInterface;
+use Sylius\Component\Core\OrderCheckoutStates;
+use Sylius\Component\Core\OrderCheckoutTransitions;
 use Sylius\Component\Order\Modifier\OrderItemQuantityModifierInterface;
 use Sylius\Component\Order\Modifier\OrderModifierInterface;
 use Sylius\Component\Order\Processor\OrderProcessorInterface;
@@ -21,6 +24,7 @@ use Tests\Tmonier\SyliusAdminOrderCreationPlugin\Unit\InMemoryFactory;
 use Tests\Tmonier\SyliusAdminOrderCreationPlugin\Unit\OrderBuilder;
 use Tmonier\SyliusAdminOrderCreationPlugin\Discount\ManualDiscount;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderModifier;
+use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreation;
 
 final class DraftOrderModifierTest extends TestCase
 {
@@ -31,14 +35,22 @@ final class DraftOrderModifierTest extends TestCase
 
     private PromotionCouponEligibilityCheckerInterface&MockObject $couponEligibilityChecker;
 
+    private StateMachineInterface&MockObject $stateMachine;
+
     private DraftOrderModifier $modifier;
 
     protected function setUp(): void
     {
+        $this->stateMachine = $this->createMock(StateMachineInterface::class);
         $this->processor = $this->createMock(OrderProcessorInterface::class);
         $this->couponRepository = $this->createMock(PromotionCouponRepositoryInterface::class);
         $this->couponEligibilityChecker = $this->createMock(PromotionCouponEligibilityCheckerInterface::class);
 
+        $this->modifier = $this->modifier();
+    }
+
+    private function modifier(bool $priceOverrideAllowed = true, bool $manualDiscountAllowed = true): DraftOrderModifier
+    {
         $quantityModifier = $this->createMock(OrderItemQuantityModifierInterface::class);
         $quantityModifier->method('modify')->willReturnCallback(static function (OrderItemInterface $item, int $quantity): void {
             while ($item->getQuantity() < $quantity) {
@@ -51,7 +63,7 @@ final class DraftOrderModifierTest extends TestCase
             }
         });
 
-        $this->modifier = new DraftOrderModifier(
+        return new DraftOrderModifier(
             new InMemoryFactory(OrderItemInterface::class, static fn (): OrderItemInterface => new OrderItem()),
             $this->createMock(OrderModifierInterface::class),
             $quantityModifier,
@@ -59,6 +71,9 @@ final class DraftOrderModifierTest extends TestCase
             OrderBuilder::adjustmentFactory(),
             $this->couponRepository,
             $this->couponEligibilityChecker,
+            $this->stateMachine,
+            $priceOverrideAllowed,
+            $manualDiscountAllowed,
         );
     }
 
@@ -96,30 +111,35 @@ final class DraftOrderModifierTest extends TestCase
         self::assertTrue($first->isImmutable());
     }
 
-    public function testTheManualDiscountIsANeutralRequestWithItsReason(): void
+    public function testTheManualDiscountIsANeutralRequestAndItsReasonStaysOnTheDraft(): void
     {
-        $order = OrderBuilder::cart([1000 => 1]);
+        $draft = $this->draft(OrderBuilder::cart([1000 => 1]));
+        $order = $draft->getOrder();
+        self::assertNotNull($order);
 
-        $this->modifier->setManualDiscount($order, 300, '  Late delivery ');
-        $this->modifier->setManualDiscount($order, 250, 'Late delivery');
+        $this->modifier->setManualDiscount($draft, 300, '  Late delivery ');
+        $this->modifier->setManualDiscount($draft, 250, 'Late delivery');
 
         $requests = $order->getAdjustments(ManualDiscount::REQUEST_ADJUSTMENT_TYPE);
         self::assertCount(1, $requests, 'A new discount replaces the previous one.');
         $request = $requests->first();
         self::assertNotFalse($request);
         self::assertTrue($request->isNeutral());
-        self::assertSame(['amount' => 250, 'reason' => 'Late delivery'], $this->modifier->getManualDiscount($order));
+        self::assertSame(ManualDiscount::REQUEST_LABEL, $request->getLabel(), 'The reason never goes on the order.');
+        self::assertSame('Late delivery', $draft->getManualDiscountReason());
+        self::assertSame(['amount' => 250, 'reason' => 'Late delivery'], $this->modifier->getManualDiscount($draft));
         self::assertSame(1000, $order->getTotal(), 'The request itself does not change the total.');
 
-        $this->modifier->setManualDiscount($order, 0, '');
-        self::assertNull($this->modifier->getManualDiscount($order));
+        $this->modifier->setManualDiscount($draft, 0, '');
+        self::assertNull($this->modifier->getManualDiscount($draft));
+        self::assertNull($draft->getManualDiscountReason());
     }
 
     public function testAManualDiscountNeedsAReason(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
-        $this->modifier->setManualDiscount(OrderBuilder::cart([1000 => 1]), 100, ' ');
+        $this->modifier->setManualDiscount($this->draft(OrderBuilder::cart([1000 => 1])), 100, ' ');
     }
 
     public function testOnlyDraftsCanBeModified(): void
@@ -128,7 +148,56 @@ final class DraftOrderModifierTest extends TestCase
         $order->setState(OrderInterface::STATE_NEW);
 
         $this->expectException(\InvalidArgumentException::class);
-        $this->modifier->setManualDiscount($order, 100, 'Too late');
+        $this->modifier->setManualDiscount($this->draft($order), 100, 'Too late');
+    }
+
+    public function testChangingTheCartAfterTheMethodsWereChosenSendsTheDraftBackToTheAddressStep(): void
+    {
+        $order = OrderBuilder::cart([1000 => 1]);
+        $order->setCheckoutState(OrderCheckoutStates::STATE_PAYMENT_SELECTED);
+        $item = $order->getItems()->first();
+        self::assertInstanceOf(OrderItemInterface::class, $item);
+        $this->stateMachine->method('can')->willReturn(true);
+        $this->stateMachine->expects(self::once())->method('apply')->with($order, OrderCheckoutTransitions::GRAPH, OrderCheckoutTransitions::TRANSITION_ADDRESS);
+
+        $this->modifier->overrideUnitPrice($order, $item, 500);
+    }
+
+    public function testChangingTheCartBeforeTheMethodsKeepsTheCheckoutState(): void
+    {
+        $order = OrderBuilder::cart([1000 => 1]);
+        $order->setCheckoutState(OrderCheckoutStates::STATE_ADDRESSED);
+        $this->stateMachine->expects(self::never())->method('apply');
+
+        $this->modifier->setManualDiscount($this->draft($order), 100, 'Gesture');
+    }
+
+    public function testDisabledFeaturesAreRemovedFromTheDrafts(): void
+    {
+        $draft = $this->draft(OrderBuilder::cart([1000 => 1]));
+        $order = $draft->getOrder();
+        self::assertNotNull($order);
+        $item = $order->getItems()->first();
+        self::assertInstanceOf(OrderItemInterface::class, $item);
+        $this->modifier->overrideUnitPrice($order, $item, 500);
+        $this->modifier->setManualDiscount($draft, 100, 'Gesture');
+
+        self::assertFalse($this->modifier->enforceFeatureSwitches($draft), 'Nothing to do while the features are enabled.');
+
+        $restricted = $this->modifier(priceOverrideAllowed: false, manualDiscountAllowed: false);
+        self::assertTrue($restricted->enforceFeatureSwitches($draft));
+        self::assertFalse($item->isImmutable());
+        self::assertNull($restricted->getManualDiscount($draft));
+        self::assertNull($draft->getManualDiscountReason());
+        self::assertFalse($restricted->enforceFeatureSwitches($draft));
+    }
+
+    private function draft(OrderInterface $order): AdminOrderCreation
+    {
+        $draft = new AdminOrderCreation();
+        $draft->setOrder($order);
+
+        return $draft;
     }
 
     public function testAnUnknownOrIneligibleCouponIsRefused(): void

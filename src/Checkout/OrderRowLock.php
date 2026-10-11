@@ -8,18 +8,13 @@ use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 
-/**
- * Serialises the operations on a draft (placement, deletion, purge): locks the order row for
- * the current transaction and reads its state again from the database.
- */
-final class OrderRowLock
+final class OrderRowLock implements OrderRowLockInterface
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
-    /** Must run inside a transaction. Returns false when the order is no longer a cart. */
     public function lockDraft(OrderInterface $order): bool
     {
         if (null === $order->getId()) {

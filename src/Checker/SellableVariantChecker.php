@@ -15,11 +15,11 @@ final class SellableVariantChecker
     {
         $product = $variant->getProduct();
 
-        return $variant->isEnabled()
-            && $product instanceof ProductInterface
-            && $product->isEnabled()
-            && $product->hasChannel($channel)
-            && null !== $variant->getChannelPricingForChannel($channel)?->getPrice()
+        return $variant->isEnabled() &&
+            $product instanceof ProductInterface &&
+            $product->isEnabled() &&
+            $product->hasChannel($channel) &&
+            null !== $variant->getChannelPricingForChannel($channel)?->getPrice()
         ;
     }
 }

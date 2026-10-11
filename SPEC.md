@@ -60,19 +60,24 @@ listener.
 | Draft storage | A regular cart + a row in `tmonier_admin_order_creation` (order 1-1, admin, admin name snapshot, source order, completion date, e-mail flags) | Never modify core entities; the cart goes through the real processor and checkout. |
 | Hide drafts from the shop | Keep `createdByGuest = true` | The core customer cart lookup ignores such carts: no decoration needed, no extra query. Session carts are not involved. |
 | Price override | `unitPrice` + core `immutable` flag | The recalculator skips immutable items; `originalUnitPrice` keeps the catalog price. |
-| Manual discount | Neutral order adjustment (request: amount + reason) distributed by a processor (priority 15) into `order_promotion` unit adjustments, origin code `tmonier_admin_order_manual_discount`, label "Discount" in the order locale | Taxes are computed on discounted units, totals / e-mails / shop / invoices treat it like a promotion; the reason stays internal; no query added to shop cart processing. Capped to the items total. |
+| Manual discount | Neutral order adjustment (request: amount, fixed label) distributed by a processor (priority 15) into `order_promotion` unit adjustments, origin code `tmonier_admin_order_manual_discount`, label "Discount" in the order locale; reason in the plugin table | Taxes are computed on discounted units, totals / e-mails / shop / invoices treat it like a promotion; the reason never reaches the order (shop API); no query added to shop cart processing. Capped to the items total. |
+| Cart changed after methods | `address` transition again | Shipping / payment chosen for another cart are never kept; empty drafts are refused. |
+| Placement integrity | Row lock + state re-read, `OrderPromotionsIntegrityChecker` + total comparison, inapplicable coupon removed | Same guarantees as the shop's `OrderIntegrityChecker`; no double placement; single-use coupons stay single-use. |
+| Expired carts | Decorate `sylius.remover.expired_carts` to exclude drafts | Drafts follow `draft_lifetime_days`, shop carts keep the core expiration. |
 | Permissions | Voter with two attributes, config flags + configurable role | Sylius CE has no RBAC; integrators can swap the voter. |
 | UI | Classic multi-step pages (POST/redirect), Twig Hooks layout, Symfony UX autocomplete for customers and variants (route `sylius_admin_entity_autocomplete`) | Robust and testable with WebTestCase; Live Components rejected (more moving parts, no gain for a 4-step flow). |
 | Methods | Choices from `sylius.resolver.shipping_methods` / `sylius.resolver.payment_methods`, fee from the shipping calculator registry | Same eligibility as the shop. |
 | Completion | Workflow `complete` + flush, then e-mails, then event | Same side effects as the shop; mail failures only warn. |
 | Payment link | Own Sylius mailer e-mail to `sylius_shop_order_show` via `sylius_channel_url` | Reuses the shop pay flow, no gateway code. |
 | Reorder | New draft, same channel/customer/locale (fallback to channel default), copies of addresses, items still sold at current prices | Coupons and custom prices are deliberate one-offs. |
-| Purge | Command over drafts whose order `updatedAt` is older than N days, batches of 100 | Explicit, schedulable; DB FK cascade also cleans the row when core removes expired carts. |
+| Purge / delete | Command over drafts whose order `updatedAt` is older than N days; each removal locks the row and re-checks the cart state | Explicit, schedulable, never deletes an order placed concurrently. |
 
 ## 3. Verification
 
-- Integration test `ShopParityTest`: the same order (two variants, coupon promotion, extra
-  10% tax rate, GB address, DHL, bank transfer) is placed through the shop API and through the
+- Every test creates its own country, zone, shipping and payment methods and tax rate in the
+  rolled-back transaction and ends the fixture promotions (the fixtures are random).
+- Integration test `ShopParityTest`: the same order (two variants, coupon promotion, 10% tax
+  excluded from prices, test shipping and payment methods) is placed through the shop API and through the
   plugin; totals, taxes, promotions, states, payments, shipments, coupon usage and inventory
   hold are identical, numbers differ, the event is dispatched once.
 - Functional tests cover the UI flow, permissions, CSRF, coupons, reorder, e-mails, drafts.

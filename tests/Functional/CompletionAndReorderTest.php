@@ -160,9 +160,24 @@ final class CompletionAndReorderTest extends WebTestCase
         self::assertResponseStatusCodeSame(403);
 
         // Placed, the new order shows its origin.
-        $this->client->request('GET', sprintf('/admin/order-drafts/%d/items', $draftOrderId));
+        $draftOrder = $this->reloadOrder($draftOrderId);
+        $creation = $this->findCreation($draftOrder);
+        self::assertNotNull($creation);
+        $this->checkout()->address($draftOrder);
+        $shipment = $draftOrder->getShipments()->first();
+        self::assertNotFalse($shipment);
+        $shippingMethod = $shipment->getMethod();
+        self::assertInstanceOf(\Sylius\Component\Core\Model\ShippingMethodInterface::class, $shippingMethod);
+        $paymentMethod = $draftOrder->getLastPayment()?->getMethod();
+        self::assertInstanceOf(\Sylius\Component\Core\Model\PaymentMethodInterface::class, $paymentMethod);
+        $this->checkout()->selectShippingAndPayment($draftOrder, [0 => $shippingMethod], $paymentMethod);
+        $this->entityManager()->flush();
+        self::assertTrue($this->checkout()->complete($creation, false, false)->isPlaced());
+
+        $this->client->request('GET', sprintf('/admin/orders/%d', $draftOrderId));
         self::assertResponseIsSuccessful();
-        self::assertSame($sourceNumber, $this->reloadOrder($sourceId)->getNumber());
+        self::assertSelectorTextContains('[data-test-reorder-of]', $sourceNumber);
+        self::assertSelectorExists(sprintf('[data-test-reorder-of] a[href="/admin/orders/%d"]', $sourceId));
     }
 
     public function testTheMenuLinksToTheDrafts(): void
@@ -172,26 +187,5 @@ final class CompletionAndReorderTest extends WebTestCase
         $this->client->request('GET', '/admin/orders/');
 
         self::assertSelectorExists('a[href="/admin/order-drafts"]');
-    }
-
-    private function prepareDraftReadyToComplete(string $email, \Sylius\Component\Core\Model\AdminUserInterface $admin): int
-    {
-        $draft = $this->createDraft($this->createCustomer($email), $admin);
-        $order = $draft->getOrder();
-        self::assertNotNull($order);
-        $order->setBillingAddress($this->createAddress('Grace', 'Hopper', '1 Main Street'));
-        $order->setShippingAddress($this->createAddress('Grace', 'Hopper', '1 Main Street'));
-        $this->checkout()->address($order);
-        $shipment = $order->getShipments()->first();
-        self::assertNotFalse($shipment);
-        $method = $shipment->getMethod();
-        self::assertInstanceOf(\Sylius\Component\Core\Model\ShippingMethodInterface::class, $method);
-        $paymentMethod = $order->getLastPayment()?->getMethod();
-        self::assertInstanceOf(\Sylius\Component\Core\Model\PaymentMethodInterface::class, $paymentMethod);
-        $this->checkout()->selectShippingAndPayment($order, [0 => $method], $paymentMethod);
-        $this->entityManager()->flush();
-        self::assertTrue($this->checkout()->isReadyToComplete($order));
-
-        return $this->orderIdOf($draft);
     }
 }

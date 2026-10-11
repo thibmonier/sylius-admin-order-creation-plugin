@@ -34,7 +34,7 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
         private readonly ValidatorInterface $validator,
         private readonly EntityManagerInterface $entityManager,
         private readonly OrderPromotionsIntegrityCheckerInterface $promotionsIntegrityChecker,
-        private readonly OrderRowLock $orderRowLock,
+        private readonly OrderRowLockInterface $orderRowLock,
         private readonly OrderEmailManagerInterface $orderEmailManager,
         private readonly PaymentLinkEmailManagerInterface $paymentLinkEmailManager,
         private readonly EventDispatcherInterface $eventDispatcher,
@@ -85,16 +85,18 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
 
     public function isReadyToComplete(OrderInterface $order): bool
     {
-        return !$order->getItems()->isEmpty()
-            && in_array($order->getCheckoutState(), [OrderCheckoutStates::STATE_PAYMENT_SELECTED, OrderCheckoutStates::STATE_PAYMENT_SKIPPED], true)
-            && $this->can($order, OrderCheckoutTransitions::TRANSITION_COMPLETE);
+        return !$order->getItems()->isEmpty() &&
+            in_array($order->getCheckoutState(), [OrderCheckoutStates::STATE_PAYMENT_SELECTED, OrderCheckoutStates::STATE_PAYMENT_SKIPPED], true) &&
+            $this->can($order, OrderCheckoutTransitions::TRANSITION_COMPLETE);
     }
 
     public function recalculate(OrderInterface $order): bool
     {
         $oldTotal = $order->getTotal();
+        $changed = null !== $this->promotionsIntegrityChecker->check($order) || $order->getTotal() !== $oldTotal;
+        $this->dropInapplicableCoupon($order);
 
-        return null !== $this->promotionsIntegrityChecker->check($order) || $order->getTotal() !== $oldTotal;
+        return $changed;
     }
 
     public function validate(OrderInterface $order): ConstraintViolationListInterface
@@ -126,6 +128,7 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
 
             $oldTotal = $order->getTotal();
             $removedPromotion = $this->promotionsIntegrityChecker->check($order);
+            $this->dropInapplicableCoupon($order);
             if (null !== $removedPromotion || $order->getTotal() !== $oldTotal) {
                 $this->entityManager->flush();
                 $connection->commit();
@@ -169,6 +172,18 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
         }
 
         return CompletionResult::placed($confirmationSent, $paymentLinkSent, $emailFailed);
+    }
+
+    /**
+     * A coupon whose promotion no longer applies (usage limit reached by other orders, expired)
+     * is taken off the order, so that placing it does not count one more use.
+     */
+    private function dropInapplicableCoupon(OrderInterface $order): void
+    {
+        $promotion = $order->getPromotionCoupon()?->getPromotion();
+        if (null !== $order->getPromotionCoupon() && (null === $promotion || !$order->getPromotions()->contains($promotion))) {
+            $order->setPromotionCoupon(null);
+        }
     }
 
     /** The order is placed whatever happens: a failing mailer only produces a warning. */

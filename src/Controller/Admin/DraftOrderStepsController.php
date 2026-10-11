@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tmonier\SyliusAdminOrderCreationPlugin\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface;
 use Sylius\Component\Core\Model\AddressInterface;
 use Sylius\Component\Core\Model\ChannelInterface;
@@ -28,7 +29,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
-use Psr\Log\LoggerInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checker\SellableVariantChecker;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\CompletionResult;

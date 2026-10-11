@@ -74,5 +74,4 @@ final class Reorderer implements ReordererInterface
 
         return new ReorderResult($draft, $skipped);
     }
-
 }
