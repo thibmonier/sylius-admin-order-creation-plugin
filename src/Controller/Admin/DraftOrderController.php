@@ -18,11 +18,13 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderFactoryInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Form\Model\StartOrderData;
 use Tmonier\SyliusAdminOrderCreationPlugin\Form\Type\StartOrderType;
 use Tmonier\SyliusAdminOrderCreationPlugin\Remover\DraftRemoverInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Reorder\ReordererInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Repository\AdminOrderCreationRepositoryInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Security\DraftVoter;
 
 /** Starts, lists and deletes the drafts; "reorder" turns a past order into a new draft. */
 final class DraftOrderController extends AbstractController
@@ -50,8 +52,14 @@ final class DraftOrderController extends AbstractController
 
     public function indexAction(): Response
     {
+        // Only the drafts the administrator may open (all of them unless restrict_drafts_to_owner).
+        $drafts = array_values(array_filter(
+            $this->creationRepository->findDrafts(self::INDEX_LIMIT),
+            fn (AdminOrderCreationInterface $draft): bool => $this->isGranted(DraftVoter::ACCESS, $draft),
+        ));
+
         return $this->renderPage('@TmonierSyliusAdminOrderCreationPlugin/admin/draft_index.html.twig', [
-            'drafts' => $this->creationRepository->findDrafts(self::INDEX_LIMIT),
+            'drafts' => $drafts,
         ]);
     }
 

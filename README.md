@@ -105,13 +105,23 @@ tmonier_sylius_admin_order_creation:
     adjustments_role: ROLE_ADMINISTRATION_ACCESS   # role needed for both
     send_confirmation_email_default: true  # default state of the checkbox of the last step
     draft_lifetime_days: 7                 # default of tmonier:admin-order:purge-drafts
+    restrict_drafts_to_owner: false        # true: only the author of a draft can open it
 ```
 
-Sylius CE gives every administrator `ROLE_ADMINISTRATION_ACCESS`. To restrict custom prices and
-discounts to some administrators, set `adjustments_role` to a role of your own
-(`ROLE_ORDER_DISCOUNTS`...) and add it to the `roles` of those admin users. The check is a
-Symfony voter (`TMONIER_ADMIN_ORDER_PRICE_OVERRIDE`, `TMONIER_ADMIN_ORDER_MANUAL_DISCOUNT`) that
-you can replace or complete with your own voter.
+> **Security:** with the defaults, **every administrator** can set custom prices and give manual
+> discounts, because Sylius CE gives every administrator `ROLE_ADMINISTRATION_ACCESS`. In
+> production, set `adjustments_role` to a role of your own (`ROLE_ORDER_DISCOUNTS`...) and add it
+> to the `roles` of the admin users who may change prices, or turn the features off.
+
+The check is a Symfony voter (`TMONIER_ADMIN_ORDER_PRICE_OVERRIDE`,
+`TMONIER_ADMIN_ORDER_MANUAL_DISCOUNT`) that you can replace or complete with your own voter. It is
+enforced on submission, not only in the forms.
+
+Drafts are shared by default: one administrator can start an order and another finish it. With
+`restrict_drafts_to_owner: true`, only the administrator who started a draft can see, edit and
+delete it (HTTP 403 otherwise, and the list hides it); drafts whose author was deleted stay open
+to everyone. The check is the `TMONIER_ADMIN_ORDER_DRAFT_ACCESS` voter (subject: the
+`AdminOrderCreation`): add a voter of your own to grant access to, say, a manager role.
 
 The `AdminOrderCreation` resource can be extended like any Sylius resource
 (`tmonier_sylius_admin_order_creation.resources.admin_order_creation.classes.model`).
@@ -204,7 +214,8 @@ The building blocks are services: `DraftOrderFactoryInterface`, `DraftOrderModif
 - Each step is a full page reload (no live component): totals are refreshed after every change.
 - Coupons, custom prices and manual discounts are not copied by *Reorder*.
 - Sylius Plus RBAC is not integrated: the plugin pages are open to every administrator,
-  only custom prices and discounts depend on `adjustments_role`.
+  only custom prices and discounts depend on `adjustments_role` (and drafts on
+  `restrict_drafts_to_owner`).
 
 ## Development
 
