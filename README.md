@@ -34,7 +34,15 @@ Twig Hooks; MySQL, MariaDB and PostgreSQL support.
 
 ## Screenshots
 
-Screenshots go in `docs/images/`.
+![New order page: channel, language and an existing or new guest customer](docs/images/admin-order-create-start.jpg)
+
+![Items step: products added with quantities, a custom unit price and a manual discount, with live totals](docs/images/admin-order-create-items.jpg)
+
+![Shipping and payment step: methods offered by the core resolvers for the order](docs/images/admin-order-create-shipping-payment.jpg)
+
+![Summary step: items, addresses, methods, notes and e-mail options before placing the order](docs/images/admin-order-create-summary.jpg)
+
+![Placed order in the admin, created by the back office with the manual discount reason and payment link](docs/images/admin-order-created.jpg)
 
 ## Requirements
 

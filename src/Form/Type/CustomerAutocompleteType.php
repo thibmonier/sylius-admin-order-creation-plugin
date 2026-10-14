@@ -36,7 +36,7 @@ final class CustomerAutocompleteType extends AbstractType
     {
         $name = trim($customer->getFullName());
 
-        return '' === $name ? (string) $customer->getEmail() : sprintf('%s <%s>', $name, (string) $customer->getEmail());
+        return '' === $name ? (string) $customer->getEmail() : sprintf('%s (%s)', $name, (string) $customer->getEmail());
     }
 
     public function getBlockPrefix(): string
