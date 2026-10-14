@@ -31,7 +31,7 @@ final class ProductVariantAutocompleteType extends AbstractType
     {
         $resolver->setDefaults([
             'class' => $this->productVariantClass,
-            'choice_label' => static fn (ProductVariantInterface $variant): string => self::label($variant),
+            'choice_label' => self::label(...),
             'security' => 'ROLE_ADMINISTRATION_ACCESS',
             'max_results' => 20,
             'filter_query' => static function (Options $options): callable {

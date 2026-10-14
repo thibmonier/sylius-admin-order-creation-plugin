@@ -57,7 +57,7 @@ class AdminOrderCreation implements AdminOrderCreationInterface
     public function setAdminUser(?AdminUserInterface $adminUser): void
     {
         $this->adminUser = $adminUser;
-        if (null === $adminUser) {
+        if (!$adminUser instanceof \Sylius\Component\Core\Model\AdminUserInterface) {
             return;
         }
 
@@ -102,7 +102,7 @@ class AdminOrderCreation implements AdminOrderCreationInterface
 
     public function isDraft(): bool
     {
-        return null === $this->completedAt && OrderInterface::STATE_CART === $this->order?->getState();
+        return !$this->completedAt instanceof \DateTimeImmutable && OrderInterface::STATE_CART === $this->order?->getState();
     }
 
     public function getManualDiscountReason(): ?string

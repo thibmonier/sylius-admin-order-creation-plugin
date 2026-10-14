@@ -23,7 +23,7 @@ use Tmonier\SyliusAdminOrderCreationPlugin\Discount\ManualDiscount;
 use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
 use Webmozart\Assert\Assert;
 
-final class DraftOrderModifier implements DraftOrderModifierInterface
+final readonly class DraftOrderModifier implements DraftOrderModifierInterface
 {
     /**
      * @param FactoryInterface<OrderItemInterface> $orderItemFactory
@@ -31,16 +31,16 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
      * @param PromotionCouponRepositoryInterface<PromotionCouponInterface> $couponRepository
      */
     public function __construct(
-        private readonly FactoryInterface $orderItemFactory,
-        private readonly OrderModifierInterface $orderModifier,
-        private readonly OrderItemQuantityModifierInterface $quantityModifier,
-        private readonly OrderProcessorInterface $orderProcessor,
-        private readonly AdjustmentFactoryInterface $adjustmentFactory,
-        private readonly PromotionCouponRepositoryInterface $couponRepository,
-        private readonly PromotionCouponEligibilityCheckerInterface $couponEligibilityChecker,
-        private readonly StateMachineInterface $stateMachine,
-        private readonly bool $priceOverrideAllowed = true,
-        private readonly bool $manualDiscountAllowed = true,
+        private FactoryInterface $orderItemFactory,
+        private OrderModifierInterface $orderModifier,
+        private OrderItemQuantityModifierInterface $quantityModifier,
+        private OrderProcessorInterface $orderProcessor,
+        private AdjustmentFactoryInterface $adjustmentFactory,
+        private PromotionCouponRepositoryInterface $couponRepository,
+        private PromotionCouponEligibilityCheckerInterface $couponEligibilityChecker,
+        private StateMachineInterface $stateMachine,
+        private bool $priceOverrideAllowed = true,
+        private bool $manualDiscountAllowed = true,
     ) {
     }
 
@@ -143,7 +143,7 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
     public function enforceFeatureSwitches(AdminOrderCreationInterface $draft): bool
     {
         $order = $draft->getOrder();
-        if (null === $order || OrderInterface::STATE_CART !== $order->getState()) {
+        if (!$order instanceof \Sylius\Component\Core\Model\OrderInterface || OrderInterface::STATE_CART !== $order->getState()) {
             return false;
         }
 
@@ -191,7 +191,7 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
             $this->orderProcessor->process($order);
 
             $promotion = $coupon->getPromotion();
-            if (null !== $promotion && $order->getPromotions()->contains($promotion)) {
+            if ($promotion instanceof \Sylius\Component\Promotion\Model\PromotionInterface && $order->getPromotions()->contains($promotion)) {
                 $this->invalidateCheckoutIfChanged($order, $before);
 
                 return true;
@@ -240,7 +240,7 @@ final class DraftOrderModifier implements DraftOrderModifierInterface
         return [
             $items,
             $order->getPromotionCoupon()?->getCode(),
-            array_map(static fn ($adjustment): int => $adjustment->getAmount(), $order->getAdjustments(ManualDiscount::REQUEST_ADJUSTMENT_TYPE)->toArray()),
+            array_map(static fn (\Sylius\Component\Order\Model\AdjustmentInterface $adjustment): int => $adjustment->getAmount(), $order->getAdjustments(ManualDiscount::REQUEST_ADJUSTMENT_TYPE)->toArray()),
             $order->getTotal(),
         ];
     }

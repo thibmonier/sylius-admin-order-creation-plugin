@@ -26,22 +26,22 @@ use Tmonier\SyliusAdminOrderCreationPlugin\Event\AdminOrderCreatedEvent;
 use Tmonier\SyliusAdminOrderCreationPlugin\Mailer\PaymentLinkEmailManagerInterface;
 use Webmozart\Assert\Assert;
 
-final class DraftOrderCheckout implements DraftOrderCheckoutInterface
+final readonly class DraftOrderCheckout implements DraftOrderCheckoutInterface
 {
     public const VALIDATION_GROUPS = ['sylius', 'sylius_checkout_complete'];
 
     public function __construct(
-        private readonly StateMachineInterface $stateMachine,
-        private readonly ValidatorInterface $validator,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly OrderPromotionsIntegrityCheckerInterface $promotionsIntegrityChecker,
-        private readonly OrderRowLockInterface $orderRowLock,
-        private readonly OrderEmailManagerInterface $orderEmailManager,
-        private readonly PaymentLinkEmailManagerInterface $paymentLinkEmailManager,
-        private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly TranslatorInterface $translator,
-        private readonly ClockInterface $clock,
-        private readonly LoggerInterface $logger,
+        private StateMachineInterface $stateMachine,
+        private ValidatorInterface $validator,
+        private EntityManagerInterface $entityManager,
+        private OrderPromotionsIntegrityCheckerInterface $promotionsIntegrityChecker,
+        private OrderRowLockInterface $orderRowLock,
+        private OrderEmailManagerInterface $orderEmailManager,
+        private PaymentLinkEmailManagerInterface $paymentLinkEmailManager,
+        private EventDispatcherInterface $eventDispatcher,
+        private TranslatorInterface $translator,
+        private ClockInterface $clock,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -75,7 +75,7 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
             $this->apply($order, OrderCheckoutTransitions::TRANSITION_SELECT_SHIPPING);
         }
 
-        if (null !== $paymentMethod && $this->canSelectPayment($order)) {
+        if ($paymentMethod instanceof \Sylius\Component\Core\Model\PaymentMethodInterface && $this->canSelectPayment($order)) {
             $payment = $order->getLastPayment(PaymentInterface::STATE_CART);
             Assert::notNull($payment, 'The order has no payment to select a method for.');
             $payment->setMethod($paymentMethod);
@@ -94,7 +94,7 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
     public function recalculate(OrderInterface $order): bool
     {
         $oldTotal = $order->getTotal();
-        $changed = null !== $this->promotionsIntegrityChecker->check($order) || $order->getTotal() !== $oldTotal;
+        $changed = $this->promotionsIntegrityChecker->check($order) instanceof \Sylius\Component\Core\Model\PromotionInterface || $order->getTotal() !== $oldTotal;
         $this->dropInapplicableCoupon($order);
 
         return $changed;
@@ -135,7 +135,7 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
             $oldTotal = $order->getTotal();
             $removedPromotion = $this->promotionsIntegrityChecker->check($order);
             $this->dropInapplicableCoupon($order);
-            if (null !== $removedPromotion || $order->getTotal() !== $oldTotal) {
+            if ($removedPromotion instanceof \Sylius\Component\Core\Model\PromotionInterface || $order->getTotal() !== $oldTotal) {
                 $this->entityManager->flush();
                 $connection->commit();
 
@@ -204,7 +204,7 @@ final class DraftOrderCheckout implements DraftOrderCheckoutInterface
     private function dropInapplicableCoupon(OrderInterface $order): void
     {
         $promotion = $order->getPromotionCoupon()?->getPromotion();
-        if (null !== $order->getPromotionCoupon() && (null === $promotion || !$order->getPromotions()->contains($promotion))) {
+        if ($order->getPromotionCoupon() instanceof \Sylius\Component\Promotion\Model\PromotionCouponInterface && (!$promotion instanceof \Sylius\Component\Promotion\Model\PromotionInterface || !$order->getPromotions()->contains($promotion))) {
             $order->setPromotionCoupon(null);
         }
     }

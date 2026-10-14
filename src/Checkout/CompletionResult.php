@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusAdminOrderCreationPlugin\Checkout;
 
-final class CompletionResult
+final readonly class CompletionResult
 {
     public const PLACED = 'placed';
 
@@ -15,13 +15,13 @@ final class CompletionResult
     public const NOT_A_DRAFT = 'not_a_draft';
 
     private function __construct(
-        public readonly string $status,
-        public readonly bool $confirmationEmailSent = false,
-        public readonly bool $paymentLinkSent = false,
-        public readonly bool $emailFailed = false,
-        public readonly ?string $removedPromotion = null,
+        public string $status,
+        public bool $confirmationEmailSent = false,
+        public bool $paymentLinkSent = false,
+        public bool $emailFailed = false,
+        public ?string $removedPromotion = null,
         /** The order is placed, but saving the e-mail flags or a listener of the event failed (logged). */
-        public readonly bool $postCompletionError = false,
+        public bool $postCompletionError = false,
     ) {
     }
 

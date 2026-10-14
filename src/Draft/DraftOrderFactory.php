@@ -18,16 +18,16 @@ use Webmozart\Assert\Assert;
  * customer and the customer's default address as billing address. The order keeps the default
  * "created by guest" flag, so the shop never resumes it as the customer's cart.
  */
-final class DraftOrderFactory implements DraftOrderFactoryInterface
+final readonly class DraftOrderFactory implements DraftOrderFactoryInterface
 {
     /**
      * @param FactoryInterface<OrderInterface> $orderFactory
      * @param FactoryInterface<AdminOrderCreationInterface> $creationFactory
      */
     public function __construct(
-        private readonly FactoryInterface $orderFactory,
-        private readonly FactoryInterface $creationFactory,
-        private readonly ObjectManager $entityManager,
+        private FactoryInterface $orderFactory,
+        private FactoryInterface $creationFactory,
+        private ObjectManager $entityManager,
     ) {
     }
 
@@ -55,7 +55,7 @@ final class DraftOrderFactory implements DraftOrderFactoryInterface
         $order->setCustomer($customer);
 
         $defaultAddress = $customer->getDefaultAddress();
-        if (null !== $defaultAddress) {
+        if ($defaultAddress instanceof \Sylius\Component\Core\Model\AddressInterface) {
             $address = clone $defaultAddress;
             $address->setCustomer(null);
             $order->setBillingAddress($address);

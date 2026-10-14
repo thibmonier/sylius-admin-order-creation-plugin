@@ -228,7 +228,7 @@ final class DraftOrderModifierTest extends TestCase
             public bool $applies = false;
         };
         $this->processor->method('process')->willReturnCallback(static function (OrderInterface $order) use ($eligibility, $promotion): void {
-            if ($eligibility->applies && null !== $order->getPromotionCoupon()) {
+            if ($eligibility->applies && $order->getPromotionCoupon() instanceof \Sylius\Component\Promotion\Model\PromotionCouponInterface) {
                 $order->addPromotion($promotion);
             }
         });

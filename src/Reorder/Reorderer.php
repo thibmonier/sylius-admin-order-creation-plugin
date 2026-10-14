@@ -14,12 +14,12 @@ use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderFactoryInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderModifierInterface;
 use Webmozart\Assert\Assert;
 
-final class Reorderer implements ReordererInterface
+final readonly class Reorderer implements ReordererInterface
 {
     public function __construct(
-        private readonly DraftOrderFactoryInterface $draftOrderFactory,
-        private readonly DraftOrderModifierInterface $draftOrderModifier,
-        private readonly SellableVariantChecker $sellableVariantChecker = new SellableVariantChecker(),
+        private DraftOrderFactoryInterface $draftOrderFactory,
+        private DraftOrderModifierInterface $draftOrderModifier,
+        private SellableVariantChecker $sellableVariantChecker = new SellableVariantChecker(),
     ) {
     }
 
@@ -51,7 +51,7 @@ final class Reorderer implements ReordererInterface
         Assert::notNull($newOrder);
 
         foreach (['billing' => $order->getBillingAddress(), 'shipping' => $order->getShippingAddress()] as $type => $address) {
-            if (null === $address) {
+            if (!$address instanceof \Sylius\Component\Core\Model\AddressInterface) {
                 continue;
             }
 

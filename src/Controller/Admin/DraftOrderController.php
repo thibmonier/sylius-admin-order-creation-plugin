@@ -84,7 +84,7 @@ final class DraftOrderController extends AbstractController
         ], $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK);
     }
 
-    public function deleteAction(Request $request, int $id): Response
+    public function deleteAction(Request $request, int $id): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $draft = $this->getDraft($id);
         $this->assertCsrfToken($request, self::draftCsrfTokenId('delete', $id));
@@ -99,7 +99,7 @@ final class DraftOrderController extends AbstractController
         return $this->redirectToRoute('tmonier_admin_order_draft_index');
     }
 
-    public function reorderAction(Request $request, int $id): Response
+    public function reorderAction(Request $request, int $id): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $order = $this->orderRepository->find($id);
         if (!$order instanceof OrderInterface) {

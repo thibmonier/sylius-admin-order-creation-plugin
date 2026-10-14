@@ -35,7 +35,7 @@ final class AdminOrderCreationExtension extends AbstractExtension
     {
         $creation = $this->getCreation($order);
 
-        return null !== $creation ? $this->draftOrderModifier->getManualDiscount($creation) : null;
+        return $creation instanceof \Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface ? $this->draftOrderModifier->getManualDiscount($creation) : null;
     }
 
     public function getCreation(mixed $order): ?AdminOrderCreationInterface

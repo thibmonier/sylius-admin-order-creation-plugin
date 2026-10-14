@@ -157,7 +157,7 @@ final class DraftOrderStepsController extends AbstractController
         return $this->redirectToStep('items', $draft);
     }
 
-    public function removeItemAction(Request $request, int $id, int $itemId): Response
+    public function removeItemAction(Request $request, int $id, int $itemId): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $draft = $this->loadDraft($id);
         $order = $this->orderOf($draft);
@@ -178,7 +178,7 @@ final class DraftOrderStepsController extends AbstractController
     public function manualDiscountAction(Request $request, int $id): Response
     {
         $draft = $this->loadDraft($id);
-        $order = $this->orderOf($draft);
+        $this->orderOf($draft);
         $granted = $this->isGranted(OrderAdjustmentVoter::MANUAL_DISCOUNT);
         if (!$granted && null === $this->draftOrderModifier->getManualDiscount($draft)) {
             throw new AccessDeniedHttpException('Manual discounts are not allowed.');
@@ -270,7 +270,7 @@ final class DraftOrderStepsController extends AbstractController
     {
         $draft = $this->loadDraft($id);
         $order = $this->orderOf($draft);
-        if (in_array($order->getCheckoutState(), ['cart'], true)) {
+        if ($order->getCheckoutState() === 'cart') {
             return $this->redirectToStep('address', $draft);
         }
 
@@ -278,7 +278,7 @@ final class DraftOrderStepsController extends AbstractController
         $payment = $order->getLastPayment(PaymentInterface::STATE_CART);
         $paymentMethods = null;
         // From "addressed", the payment method becomes selectable once the shipping one is.
-        if (null !== $payment && ($this->checkout->canSelectPayment($order) || [] !== $shipments)) {
+        if ($payment instanceof \Sylius\Component\Core\Model\PaymentInterface && ($this->checkout->canSelectPayment($order) || [] !== $shipments)) {
             /** @var list<PaymentMethodInterface> $paymentMethods */
             $paymentMethods = array_values($this->paymentMethodsResolver->getSupportedMethods($payment));
         }
@@ -336,7 +336,7 @@ final class DraftOrderStepsController extends AbstractController
 
         $form = $this->createForm(CompleteType::class, ['notes' => $order->getNotes()], [
             'send_confirmation_email' => $this->sendConfirmationEmailDefault,
-            'can_send_payment_link' => $order->getTotal() > 0 && null !== $order->getLastPayment(PaymentInterface::STATE_CART),
+            'can_send_payment_link' => $order->getTotal() > 0 && $order->getLastPayment(PaymentInterface::STATE_CART) instanceof \Sylius\Component\Core\Model\PaymentInterface,
             'action' => $this->generateUrl('tmonier_admin_order_draft_summary', ['id' => $id]),
         ]);
         $form->handleRequest($request);
@@ -434,7 +434,7 @@ final class DraftOrderStepsController extends AbstractController
             $forms += ['discount_form' => $this->createManualDiscountForm($draft)];
         }
 
-        return $this->renderStep('items', $draft, array_map(static fn (FormInterface $form) => $form->createView(), $forms), $status);
+        return $this->renderStep('items', $draft, array_map(static fn (FormInterface $form): \Symfony\Component\Form\FormView => $form->createView(), $forms), $status);
     }
 
     /** @param array<string, mixed> $parameters */
@@ -499,7 +499,7 @@ final class DraftOrderStepsController extends AbstractController
         // The order's own address entities are edited in place (no orphan address rows).
         $billing = $order->getBillingAddress();
         $shipping = $order->getShippingAddress();
-        $different = null !== $billing && null !== $shipping && !$this->sameAddress($billing, $shipping);
+        $different = $billing instanceof \Sylius\Component\Core\Model\AddressInterface && $shipping instanceof \Sylius\Component\Core\Model\AddressInterface && !$this->sameAddress($billing, $shipping);
 
         $source = null;
         $bookAddressId = $request->query->getInt('address');
@@ -509,7 +509,7 @@ final class DraftOrderStepsController extends AbstractController
                 $different = false;
             }
         }
-        if (null === $billing && null === $source) {
+        if (!$billing instanceof \Sylius\Component\Core\Model\AddressInterface && null === $source) {
             $source = $this->getCustomer($order)?->getDefaultAddress();
         }
 
@@ -539,7 +539,7 @@ final class DraftOrderStepsController extends AbstractController
     private function getAddressBook(OrderInterface $order): array
     {
         $customer = $this->getCustomer($order);
-        if (null === $customer) {
+        if (!$customer instanceof \Sylius\Component\Core\Model\CustomerInterface) {
             return [];
         }
 

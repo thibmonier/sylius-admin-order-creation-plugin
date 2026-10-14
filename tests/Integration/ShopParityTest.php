@@ -216,7 +216,7 @@ final class ShopParityTest extends WebTestCase
     /** @return list<string> */
     private function promotionCodes(OrderInterface $order): array
     {
-        $codes = array_map(static fn ($promotion): string => (string) $promotion->getCode(), $order->getPromotions()->toArray());
+        $codes = array_map(static fn (\Sylius\Component\Promotion\Model\PromotionInterface $promotion): string => (string) $promotion->getCode(), $order->getPromotions()->toArray());
         sort($codes);
 
         return $codes;
@@ -242,7 +242,7 @@ final class ShopParityTest extends WebTestCase
     /** @return list<array<string, mixed>> */
     private function paymentSnapshot(OrderInterface $order): array
     {
-        return array_values(array_map(static fn ($payment): array => [
+        return array_values(array_map(static fn (\Sylius\Component\Payment\Model\PaymentInterface $payment): array => [
             'state' => $payment->getState(),
             'amount' => $payment->getAmount(),
             'method' => $payment->getMethod()?->getCode(),
@@ -253,7 +253,7 @@ final class ShopParityTest extends WebTestCase
     /** @return list<array<string, mixed>> */
     private function shipmentSnapshot(OrderInterface $order): array
     {
-        return array_values(array_map(static fn ($shipment): array => [
+        return array_values(array_map(static fn (\Sylius\Component\Core\Model\ShipmentInterface $shipment): array => [
             'state' => $shipment->getState(),
             'method' => $shipment->getMethod()?->getCode(),
             'units' => $shipment->getUnits()->count(),

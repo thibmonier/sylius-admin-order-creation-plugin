@@ -11,13 +11,13 @@ use Sylius\Resource\Model\ResourceInterface;
  * @template T of ResourceInterface
  * @implements FactoryInterface<T>
  */
-final class InMemoryFactory implements FactoryInterface
+final readonly class InMemoryFactory implements FactoryInterface
 {
     /**
      * @param class-string<T> $type
      * @param \Closure(): T $create
      */
-    public function __construct(public readonly string $type, private readonly \Closure $create)
+    public function __construct(public string $type, private \Closure $create)
     {
     }
 
