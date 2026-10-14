@@ -18,13 +18,13 @@ use Webmozart\Assert\Assert;
  * requested manual discount over the items, proportionally to their total, then over their units.
  * The discount never exceeds the items total. Orders without a request are left untouched.
  */
-final class ManualDiscountProcessor implements OrderProcessorInterface
+final readonly class ManualDiscountProcessor implements OrderProcessorInterface
 {
     /** @param AdjustmentFactoryInterface<AdjustmentInterface> $adjustmentFactory */
     public function __construct(
-        private readonly AdjustmentFactoryInterface $adjustmentFactory,
-        private readonly ProportionalIntegerDistributorInterface $distributor,
-        private readonly TranslatorInterface $translator,
+        private AdjustmentFactoryInterface $adjustmentFactory,
+        private ProportionalIntegerDistributorInterface $distributor,
+        private TranslatorInterface $translator,
     ) {
     }
 
@@ -49,7 +49,7 @@ final class ManualDiscountProcessor implements OrderProcessorInterface
         }
 
         $items = array_values($order->getItems()->toArray());
-        $itemTotals = array_map(static fn ($item): int => max(0, $item->getTotal()), $items);
+        $itemTotals = array_map(static fn (\Sylius\Component\Core\Model\OrderItemInterface $item): int => max(0, $item->getTotal()), $items);
         $amount = min($requestedAmount, array_sum($itemTotals));
         if ($amount <= 0) {
             return;
@@ -63,7 +63,7 @@ final class ManualDiscountProcessor implements OrderProcessorInterface
             }
 
             $units = array_values($item->getUnits()->toArray());
-            $unitTotals = array_map(static fn ($unit): int => max(0, $unit->getTotal()), $units);
+            $unitTotals = array_map(static fn (\Sylius\Component\Order\Model\OrderItemUnitInterface $unit): int => max(0, $unit->getTotal()), $units);
             if (array_sum($unitTotals) <= 0) {
                 continue;
             }

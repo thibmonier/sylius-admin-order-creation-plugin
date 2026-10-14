@@ -8,18 +8,18 @@ use Doctrine\ORM\EntityManagerInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\OrderRowLockInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
 
-final class DraftRemover implements DraftRemoverInterface
+final readonly class DraftRemover implements DraftRemoverInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly OrderRowLockInterface $orderRowLock,
+        private EntityManagerInterface $entityManager,
+        private OrderRowLockInterface $orderRowLock,
     ) {
     }
 
     public function remove(AdminOrderCreationInterface $draft): bool
     {
         $order = $draft->getOrder();
-        if (null === $order) {
+        if (!$order instanceof \Sylius\Component\Core\Model\OrderInterface) {
             return false;
         }
 

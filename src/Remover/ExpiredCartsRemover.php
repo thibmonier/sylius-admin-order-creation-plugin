@@ -16,16 +16,16 @@ use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
  * Replaces the core remover of `sylius:remove-expired-carts`: same behaviour and events, but
  * the admin drafts are left out, their lifetime is handled by tmonier:admin-order:purge-drafts.
  */
-final class ExpiredCartsRemover implements ExpiredCartsRemoverInterface
+final readonly class ExpiredCartsRemover implements ExpiredCartsRemoverInterface
 {
     /** @param EntityRepository<OrderInterface> $orderRepository */
     public function __construct(
-        private readonly EntityRepository $orderRepository,
-        private readonly ObjectManager $orderManager,
-        private readonly EventDispatcherInterface $eventDispatcher,
-        private readonly string $expirationPeriod,
-        private readonly string $adminOrderCreationClass,
-        private readonly int $batchSize = 100,
+        private EntityRepository $orderRepository,
+        private ObjectManager $orderManager,
+        private EventDispatcherInterface $eventDispatcher,
+        private string $expirationPeriod,
+        private string $adminOrderCreationClass,
+        private int $batchSize = 100,
     ) {
     }
 

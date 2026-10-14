@@ -76,14 +76,14 @@ final class StartOrderType extends AbstractType
         }
 
         $email = trim((string) $data->email);
-        if (null === $data->customer && '' === $email) {
+        if (!$data->customer instanceof \Sylius\Component\Core\Model\CustomerInterface && '' === $email) {
             $context->buildViolation('tmonier_admin_order.customer.required')->atPath('customer')->addViolation();
         }
-        if (null !== $data->customer && '' !== $email) {
+        if ($data->customer instanceof \Sylius\Component\Core\Model\CustomerInterface && '' !== $email) {
             $context->buildViolation('tmonier_admin_order.customer.ambiguous')->atPath('email')->addViolation();
         }
 
-        if (null !== $data->channel && null !== $data->locale && !$data->channel->hasLocale($data->locale)) {
+        if ($data->channel instanceof \Sylius\Component\Core\Model\ChannelInterface && $data->locale instanceof \Sylius\Component\Locale\Model\LocaleInterface && !$data->channel->hasLocale($data->locale)) {
             $context->buildViolation('tmonier_admin_order.locale.not_in_channel')->atPath('locale')->addViolation();
         }
     }

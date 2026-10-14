@@ -132,7 +132,7 @@ final class AdminOrderCreationFlowTest extends WebTestCase
         self::assertTrue($draft->isConfirmationEmailSent());
 
         $crawler = $this->client->followRedirect();
-        self::assertSelectorTextContains('[data-test-sylius-flash-message]', sprintf('The order %s has been placed.', (string) $order->getNumber()));
+        self::assertSelectorTextContains('[data-test-sylius-flash-message]', sprintf('The order %s has been placed.', $order->getNumber()));
         self::assertSelectorTextContains('[data-test-created-by]', 'Back office, by John Doe');
         self::assertStringNotContainsString('tmonier_admin_order.', $crawler->filter('body')->text());
     }

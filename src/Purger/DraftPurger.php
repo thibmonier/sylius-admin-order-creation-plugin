@@ -12,13 +12,13 @@ use Tmonier\SyliusAdminOrderCreationPlugin\Repository\AdminOrderCreationReposito
  * and shipments are cascaded by the core mapping) and the plugin record. A draft placed while
  * the purge runs is kept (see DraftRemover).
  */
-final class DraftPurger implements DraftPurgerInterface
+final readonly class DraftPurger implements DraftPurgerInterface
 {
     private const BATCH_SIZE = 100;
 
     public function __construct(
-        private readonly AdminOrderCreationRepositoryInterface $repository,
-        private readonly DraftRemoverInterface $remover,
+        private AdminOrderCreationRepositoryInterface $repository,
+        private DraftRemoverInterface $remover,
     ) {
     }
 

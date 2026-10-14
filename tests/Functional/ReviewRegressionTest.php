@@ -83,7 +83,7 @@ final class ReviewRegressionTest extends WebTestCase
         $orderId = $this->prepareDraftReadyToComplete('listener.failure@example.com');
         /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher */
         $dispatcher = self::getContainer()->get('event_dispatcher');
-        $dispatcher->addListener('tmonier_admin_order.order_created', static function (): void {
+        $dispatcher->addListener('tmonier_admin_order.order_created', static function (): never {
             throw new \RuntimeException('ERP unreachable');
         });
 

@@ -10,13 +10,13 @@ use Sylius\Component\Core\OrderPaymentStates;
 use Sylius\Component\Mailer\Sender\SenderInterface;
 use Webmozart\Assert\Assert;
 
-final class PaymentLinkEmailManager implements PaymentLinkEmailManagerInterface
+final readonly class PaymentLinkEmailManager implements PaymentLinkEmailManagerInterface
 {
     private const PAYABLE_STATES = [OrderPaymentStates::STATE_AWAITING_PAYMENT, OrderPaymentStates::STATE_PARTIALLY_PAID];
 
     public function __construct(
-        private readonly SenderInterface $emailSender,
-        private readonly bool $shopEnabled,
+        private SenderInterface $emailSender,
+        private bool $shopEnabled,
     ) {
     }
 
@@ -27,7 +27,7 @@ final class PaymentLinkEmailManager implements PaymentLinkEmailManagerInterface
             null !== $order->getTokenValue() &&
             null !== $order->getCustomer()?->getEmail() &&
             in_array($order->getPaymentState(), self::PAYABLE_STATES, true) &&
-            null !== $order->getLastPayment(PaymentInterface::STATE_NEW)
+            $order->getLastPayment(PaymentInterface::STATE_NEW) instanceof \Sylius\Component\Core\Model\PaymentInterface
         ;
     }
 

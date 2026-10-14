@@ -8,10 +8,10 @@ use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 
-final class OrderRowLock implements OrderRowLockInterface
+final readonly class OrderRowLock implements OrderRowLockInterface
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -37,10 +37,10 @@ final class OrderRowLock implements OrderRowLockInterface
         // Locking reads only (refresh with a lock mode is a SELECT ... FOR UPDATE).
         $coupon = $order->getPromotionCoupon();
         $promotions = $order->getPromotions()->toArray();
-        if (null !== $coupon) {
+        if ($coupon instanceof \Sylius\Component\Promotion\Model\PromotionCouponInterface) {
             $this->entityManager->refresh($coupon, LockMode::PESSIMISTIC_WRITE);
             $couponPromotion = $coupon->getPromotion();
-            if (null !== $couponPromotion && !in_array($couponPromotion, $promotions, true)) {
+            if ($couponPromotion instanceof \Sylius\Component\Promotion\Model\PromotionInterface && !in_array($couponPromotion, $promotions, true)) {
                 $promotions[] = $couponPromotion;
             }
         }

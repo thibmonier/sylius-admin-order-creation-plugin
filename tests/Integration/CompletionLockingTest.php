@@ -39,7 +39,7 @@ final class CompletionLockingTest extends WebTestCase
     {
         $this->client = self::createClient();
         $this->client->disableReboot();
-        if (!str_contains((string) $this->connection()->getDatabasePlatform()::class, 'MySQL') && !str_contains((string) $this->connection()->getDatabasePlatform()::class, 'MariaDB')) {
+        if (!str_contains($this->connection()->getDatabasePlatform()::class, 'MySQL') && !str_contains($this->connection()->getDatabasePlatform()::class, 'MariaDB')) {
             self::markTestSkipped('The concurrent process uses MySQL / MariaDB locking statements.');
         }
 
@@ -210,7 +210,7 @@ final class CompletionLockingTest extends WebTestCase
         $em->clear();
         foreach ([TaxRateInterface::class => 'tmonier_standard_10', TaxCategoryInterface::class => self::TAX_CATEGORY, ShippingMethodInterface::class => [self::SHIPPING_METHOD, self::EXPRESS_SHIPPING_METHOD], PaymentMethodInterface::class => self::PAYMENT_METHOD, ZoneInterface::class => 'TMONIER_ZONE'] as $class => $codes) {
             foreach ($em->getRepository($class)->findBy(['code' => $codes]) as $entity) {
-                if ($entity instanceof PaymentMethodInterface && null !== $entity->getGatewayConfig()) {
+                if ($entity instanceof PaymentMethodInterface && $entity->getGatewayConfig() instanceof \Sylius\Component\Payment\Model\GatewayConfigInterface) {
                     $em->remove($entity->getGatewayConfig());
                 }
                 $em->remove($entity);
