@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Tmonier\SyliusAdminOrderCreationPlugin\Entity\AdminOrderCreationInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Security\DraftVoter;
 
 /**
  * @property \Tmonier\SyliusAdminOrderCreationPlugin\Repository\AdminOrderCreationRepositoryInterface $creationRepository
@@ -28,12 +29,18 @@ trait DraftControllerTrait
         return sprintf('tmonier_admin_order_%s_%d', $action, $id);
     }
 
-    /** The draft of the order with this id; 404 when the order is not (or no longer) an admin draft. */
+    /**
+     * The draft of the order with this id; 404 when the order is not (or no longer) an admin
+     * draft, 403 when the current administrator may not open it (DraftVoter).
+     */
     private function getDraft(int $orderId): AdminOrderCreationInterface
     {
         $draft = $this->creationRepository->findDraftByOrderId($orderId);
         if (null === $draft || null === $draft->getOrder()) {
             throw new NotFoundHttpException('Draft order not found.');
+        }
+        if (!$this->isGranted(DraftVoter::ACCESS, $draft)) {
+            throw new AccessDeniedHttpException('This draft belongs to another administrator.');
         }
 
         return $draft;

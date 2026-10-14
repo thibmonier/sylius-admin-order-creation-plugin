@@ -29,6 +29,7 @@ use Tmonier\SyliusAdminOrderCreationPlugin\Remover\ExpiredCartsRemover;
 use Tmonier\SyliusAdminOrderCreationPlugin\Reorder\Reorderer;
 use Tmonier\SyliusAdminOrderCreationPlugin\Reorder\ReordererInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Repository\AdminOrderCreationRepositoryInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Security\DraftVoter;
 use Tmonier\SyliusAdminOrderCreationPlugin\Security\OrderAdjustmentVoter;
 use Tmonier\SyliusAdminOrderCreationPlugin\Twig\AdminOrderCreationExtension;
 
@@ -171,6 +172,12 @@ return static function (ContainerConfigurator $container): void {
             param('tmonier_admin_order.allow_manual_discount'),
             param('tmonier_admin_order.adjustments_role'),
         ])
+        ->tag('security.voter')
+    ;
+
+    $services
+        ->set('tmonier_admin_order.security.draft_voter', DraftVoter::class)
+        ->args([param('tmonier_admin_order.restrict_drafts_to_owner')])
         ->tag('security.voter')
     ;
 

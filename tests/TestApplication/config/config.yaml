@@ -17,7 +17,12 @@ doctrine:
                         dir: '%kernel.project_dir%/../../../tests/TestApplication/src/Entity'
                         prefix: Tests\Tmonier\SyliusAdminOrderCreationPlugin
 
+parameters:
+    # DraftOwnershipTest boots kernels with this variable set to 1.
+    env(TMONIER_ADMIN_ORDER_RESTRICT_DRAFTS): '0'
+
 # The functional tests check that price overrides and manual discounts need this role.
 when@test:
     tmonier_sylius_admin_order_creation:
         adjustments_role: ROLE_TMONIER_ORDER_ADJUSTMENTS
+        restrict_drafts_to_owner: '%env(bool:TMONIER_ADMIN_ORDER_RESTRICT_DRAFTS)%'

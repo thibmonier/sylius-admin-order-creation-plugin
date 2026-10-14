@@ -18,7 +18,7 @@ final class TmonierSyliusAdminOrderCreationExtension extends AbstractResourceExt
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{driver: string, resources: array<string, mixed>, allow_price_override: bool, allow_manual_discount: bool, adjustments_role: string, send_confirmation_email_default: bool, draft_lifetime_days: int} $config */
+        /** @var array{driver: string, resources: array<string, mixed>, allow_price_override: bool, allow_manual_discount: bool, adjustments_role: string, send_confirmation_email_default: bool, draft_lifetime_days: int, restrict_drafts_to_owner: bool} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $this->registerResources('tmonier_admin_order', $config['driver'], $config['resources'], $container);
@@ -28,6 +28,7 @@ final class TmonierSyliusAdminOrderCreationExtension extends AbstractResourceExt
         $container->setParameter('tmonier_admin_order.adjustments_role', $config['adjustments_role']);
         $container->setParameter('tmonier_admin_order.send_confirmation_email_default', $config['send_confirmation_email_default']);
         $container->setParameter('tmonier_admin_order.draft_lifetime_days', $config['draft_lifetime_days']);
+        $container->setParameter('tmonier_admin_order.restrict_drafts_to_owner', $config['restrict_drafts_to_owner']);
 
         /** @var array<string, string> $bundles */
         $bundles = $container->getParameter('kernel.bundles');
@@ -39,8 +40,13 @@ final class TmonierSyliusAdminOrderCreationExtension extends AbstractResourceExt
 
     public function prepend(ContainerBuilder $container): void
     {
+        // Only the resources node: the other values may still be unresolved env placeholders at
+        // this stage (e.g. restrict_drafts_to_owner: '%env(bool:...)%'), which boolean nodes reject.
         /** @var array{resources: array<string, array{classes: array{model: string}}>} $config */
-        $config = $this->processConfiguration(new Configuration(), $container->getExtensionConfig($this->getAlias()));
+        $config = $this->processConfiguration(new Configuration(), array_map(
+            static fn (array $config): array => array_intersect_key($config, ['resources' => true]),
+            $container->getExtensionConfig($this->getAlias()),
+        ));
         foreach ($config['resources'] as $name => $resource) {
             $container->setParameter(sprintf('tmonier_admin_order.model.%s.class', $name), $resource['classes']['model']);
         }
