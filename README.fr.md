@@ -9,8 +9,7 @@
 
 Sylius 2 ne permet pas de créer une commande en back-office : la section des commandes de
 l'administration se contente de lister, d'afficher et d'annuler les commandes passées dans la
-boutique. Le `sylius/admin-order-creation-plugin` officiel a été archivé à l'époque de Sylius 1.x,
-et la fonctionnalité n'existe par ailleurs que dans le Sylius Plus payant.
+boutique. Le `sylius/admin-order-creation-plugin` officiel a été archivé à l'époque de Sylius 1.x.
 
 Ce plugin permet à un administrateur de construire un panier pour un client, étape par étape, et
 de le passer par le **même tunnel de commande que la boutique** : même processeur de commande

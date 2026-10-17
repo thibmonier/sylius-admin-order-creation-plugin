@@ -9,7 +9,7 @@
 
 Sylius 2 has no way to create an order in the back office: the admin order section only lists,
 shows and cancels orders placed in the shop. The official `sylius/admin-order-creation-plugin`
-was archived at Sylius 1.x, and the feature is otherwise only part of the paid Sylius Plus.
+was archived at Sylius 1.x.
 
 This plugin lets an administrator build a cart for a customer, step by step, and place it
 through the **same checkout as the shop**: same order processor (prices, promotions, coupons,
