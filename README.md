@@ -23,7 +23,7 @@ shipping states and confirmation e-mail. Free and open source.
 | Take an order on the phone | **Create order** button on the orders list and on the customer page (customer preselected). Choose the channel and language, then an existing customer (search by e-mail or name) or a new guest customer by e-mail. |
 | Build the cart | Search products by name or code (variants of the channel), quantities, live totals recalculated by the Sylius order processor (catalog and cart promotions, coupon, shipping, taxes). |
 | Commercial gestures | Optional **custom unit price** per item and **manual order discount** with an internal reason, both behind a role and switchable off in the configuration. The discount is spread over the units like an order promotion, so taxes, invoices, e-mails and the shop pages handle it. |
-| Addresses | Prefilled with the customer's default address, one click to use any address of the address book, separate shipping address when needed. |
+| Addresses | Prefilled with the customer's default address, a choice among the known addresses (the customer's company, when a plugin provides them, then the address book), separate shipping address when needed. |
 | Shipping and payment | Only the methods the core resolvers offer for the order (channel, zone, eligibility), with the shipping fee. Steps the shop would skip are skipped. |
 | Place the order | Summary, checkout validation of the shop (stock, eligibility), notes, **order confirmation e-mail on/off**, optional **payment link e-mail**: the customer pays from the shop's order page (`/order/{token}`, the standard "pay again" flow, any payment gateway). |
 | Reorder | **Reorder** action on the order page: a new draft with the same items (still sold, current prices), addresses and customer. |
@@ -204,6 +204,27 @@ public function onAdminOrderCreated(AdminOrderCreatedEvent $event): void
 
 The building blocks are services: `DraftOrderFactoryInterface`, `DraftOrderModifierInterface`,
 `DraftOrderCheckoutInterface`, `ReordererInterface` (for imports or another UI).
+
+### Address sources (company addresses, address book)
+
+The address step offers, as groups of radio buttons, the addresses the customer may reuse: first those of the groups added by other plugins (for instance the addresses of the customer's company), then the customer's **address book**, then the usual form to type an address. The chosen address prefills the billing and shipping addresses and can still be edited; the order always holds a **copy**, never a link to the source address. The address is read from the server-side whitelist of the sources, so an identifier that no source offers for this customer (another customer, another company) is refused with an error message and the order is not modified.
+
+Adding a group does not require changing the plugin, and the plugin depends on none of them: implement `Tmonier\SyliusAdminOrderCreationPlugin\Address\OrderAddressSourceInterface` in the plugin that knows the addresses (it is autoconfigured with the `tmonier_admin_order.address_source` tag; give the tag a `priority` to order the groups, the highest first, the address book being at 0). A shop without such a plugin simply sees the address book.
+
+```php
+final class CompanyAddressSource implements OrderAddressSourceInterface
+{
+    public function getCode(): string { return 'company'; }
+
+    public function getLabel(): string { return 'my_plugin.ui.company_addresses'; } // translation key (messages domain)
+
+    public function getAddresses(OrderInterface $order): array
+    {
+        // Only the addresses of the customer's company, as Sylius addresses indexed by their identifier.
+        return $this->addressesOf($order->getCustomer());
+    }
+}
+```
 
 ## Limitations
 
