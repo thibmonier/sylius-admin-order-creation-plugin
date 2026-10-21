@@ -3,20 +3,28 @@
 {% set form = ctx.form %}
 {% form_theme form '@SyliusAdmin/shared/form_theme.html.twig' %}
 
-{% if ctx.address_book is not empty %}
-    <div class="card mb-3" data-test-address-book>
-        <div class="card-header"><h3 class="card-title">{{ 'tmonier_admin_order.ui.address_book'|trans }}</h3></div>
-        <div class="list-group list-group-flush">
-            {% for book_address in ctx.address_book %}
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <div class="small">{{ address(book_address) }}</div>
-                    <a class="btn btn-sm" href="{{ path('tmonier_admin_order_draft_address', {'id': order.id, 'address': book_address.id}) }}" data-test-use-address="{{ book_address.id }}">
-                        {{ 'tmonier_admin_order.ui.use_address'|trans }}
-                    </a>
-                </div>
-            {% endfor %}
+{% if ctx.address_groups is not empty %}
+    <form method="get" action="{{ path('tmonier_admin_order_draft_address', {'id': order.id}) }}" class="card mb-3" data-test-address-book data-test-address-picker>
+        <div class="card-header">
+            <h3 class="card-title" id="known-addresses-title">{{ 'tmonier_admin_order.ui.known_addresses'|trans }}</h3>
         </div>
-    </div>
+        <div class="card-body">
+            <p class="text-secondary" id="known-addresses-help">{{ 'tmonier_admin_order.ui.known_addresses_help'|trans }}</p>
+            {% for group in ctx.address_groups %}
+                <fieldset class="mb-3" data-test-address-group="{{ group.code }}" aria-describedby="known-addresses-help">
+                    <legend class="h4">{{ group.label|trans }}</legend>
+                    {% for reference, known_address in group.addresses %}
+                        <div class="form-check py-2">
+                            <input class="form-check-input" type="radio" name="address" id="known-address-{{ group.code }}-{{ loop.index }}" value="{{ reference }}" required data-test-use-address>
+                            <label class="form-check-label" for="known-address-{{ group.code }}-{{ loop.index }}">{{ address(known_address) }}</label>
+                        </div>
+                    {% endfor %}
+                </fieldset>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">{{ 'tmonier_admin_order.ui.use_selected_address'|trans }}</button>
+        </div>
+    </form>
+    <h3 class="h4 mb-3">{{ 'tmonier_admin_order.ui.enter_address'|trans }}</h3>
 {% endif %}
 
 {{ form_start(form, {attr: {novalidate: 'novalidate', 'data-test-address-form': ''}}) }}

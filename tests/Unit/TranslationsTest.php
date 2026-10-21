@@ -25,6 +25,7 @@ final class TranslationsTest extends TestCase
         'tmonier_admin_order.send_confirmation_email_default',
         'tmonier_admin_order.draft_lifetime_days',
         'tmonier_admin_order.restrict_drafts_to_owner',
+        'tmonier_admin_order.address_source',
     ];
 
     /** @return iterable<string, array{string, string}> */

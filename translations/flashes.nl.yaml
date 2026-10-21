@@ -23,3 +23,4 @@ tmonier_admin_order:
     order_placed: 'De bestelling %number% is geplaatst.'
     payment_link_sent: 'De betaallink is naar de klant gestuurd.'
     email_failed: 'De bestelling is geplaatst, maar een e-mail kon niet worden verzonden.'
+    address_not_available: 'Dit adres is niet beschikbaar voor deze klant.'

@@ -30,6 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Contracts\Translation\TranslatorInterface;
+use Tmonier\SyliusAdminOrderCreationPlugin\Address\OrderAddressSourcesInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checker\SellableVariantChecker;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\CompletionResult;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\DraftOrderCheckoutInterface;
@@ -70,6 +71,7 @@ final class DraftOrderStepsController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly SellableVariantChecker $sellableVariantChecker,
         private readonly TranslatorInterface $translator,
+        private readonly OrderAddressSourcesInterface $addressSources,
         private readonly bool $sendConfirmationEmailDefault,
         private readonly ?LoggerInterface $logger = null,
     ) {
@@ -243,7 +245,14 @@ final class DraftOrderStepsController extends AbstractController
         $channel = $order->getChannel();
         \assert($channel instanceof ChannelInterface);
 
-        $form = $this->createForm(AddressStepType::class, $this->getAddressData($request, $order), [
+        $chosen = $this->findChosenAddress($request, $order);
+        if (false === $chosen) {
+            $this->addFlash('error', 'tmonier_admin_order.address_not_available');
+
+            return $this->redirectToStep('address', $draft);
+        }
+
+        $form = $this->createForm(AddressStepType::class, $this->getAddressData($order, $chosen), [
             'channel' => $channel,
             'action' => $this->generateUrl('tmonier_admin_order_draft_address', ['id' => $id]),
         ]);
@@ -262,7 +271,7 @@ final class DraftOrderStepsController extends AbstractController
 
         return $this->renderStep('address', $draft, [
             'form' => $form->createView(),
-            'address_book' => $this->getAddressBook($order),
+            'address_groups' => $this->addressSources->getGroups($order),
         ], $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK);
     }
 
@@ -489,32 +498,43 @@ final class DraftOrderStepsController extends AbstractController
     }
 
     /**
-     * The order addresses, else a copy of an address of the customer's address book (?address=id),
-     * else the customer's default address; the shipping address defaults to the billing one.
+     * The address chosen with ?address=source:key, null when none is asked, false when the
+     * reference is not offered by any source for this customer (never trusted: the sources are
+     * the whitelist).
+     */
+    private function findChosenAddress(Request $request, OrderInterface $order): AddressInterface|false|null
+    {
+        $reference = $request->query->all()['address'] ?? null;
+        if (null === $reference || '' === $reference) {
+            return null;
+        }
+
+        return \is_string($reference) ? ($this->addressSources->find($order, $reference) ?? false) : false;
+    }
+
+    /**
+     * The order addresses, else a copy of the chosen address (a company address or one of the
+     * address book), else the customer's default address; the shipping address defaults to the
+     * billing one.
      *
      * @return array{billingAddress: AddressInterface, shippingAddress: AddressInterface, differentShippingAddress: bool}
      */
-    private function getAddressData(Request $request, OrderInterface $order): array
+    private function getAddressData(OrderInterface $order, ?AddressInterface $source): array
     {
         // The order's own address entities are edited in place (no orphan address rows).
         $billing = $order->getBillingAddress();
         $shipping = $order->getShippingAddress();
         $different = $billing instanceof \Sylius\Component\Core\Model\AddressInterface && $shipping instanceof \Sylius\Component\Core\Model\AddressInterface && !$this->sameAddress($billing, $shipping);
 
-        $source = null;
-        $bookAddressId = $request->query->getInt('address');
-        foreach ($bookAddressId > 0 ? $this->getAddressBook($order) : [] as $bookAddress) {
-            if ($bookAddress->getId() === $bookAddressId) {
-                $source = $bookAddress;
-                $different = false;
-            }
+        if ($source instanceof AddressInterface) {
+            $different = false;
         }
-        if (!$billing instanceof \Sylius\Component\Core\Model\AddressInterface && null === $source) {
+        if (!$billing instanceof \Sylius\Component\Core\Model\AddressInterface && !$source instanceof \Sylius\Component\Core\Model\AddressInterface) {
             $source = $this->getCustomer($order)?->getDefaultAddress();
         }
 
         $billing ??= $this->addressFactory->createNew();
-        if (null !== $source) {
+        if ($source instanceof \Sylius\Component\Core\Model\AddressInterface) {
             $this->copyInto($source, $billing);
         }
         $shipping ??= $this->addressFactory->createNew();
@@ -533,20 +553,6 @@ final class DraftOrderStepsController extends AbstractController
             'shippingAddress' => $shipping,
             'differentShippingAddress' => $different,
         ];
-    }
-
-    /** @return list<AddressInterface> */
-    private function getAddressBook(OrderInterface $order): array
-    {
-        $customer = $this->getCustomer($order);
-        if (!$customer instanceof \Sylius\Component\Core\Model\CustomerInterface) {
-            return [];
-        }
-
-        /** @var list<AddressInterface> $addresses */
-        $addresses = array_values($customer->getAddresses()->toArray());
-
-        return $addresses;
     }
 
     private function getCustomer(OrderInterface $order): ?CustomerInterface

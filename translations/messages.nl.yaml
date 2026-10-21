@@ -43,7 +43,10 @@ tmonier_admin_order:
         apply_discount: 'Korting toepassen'
         next_step: 'Volgende: %step%'
         address_book: Adresboek
-        use_address: 'Dit adres gebruiken'
+        known_addresses: 'Bekende adressen'
+        known_addresses_help: 'Kies een adres van het bedrijf of uit het adresboek en pas het hieronder zo nodig aan.'
+        use_selected_address: 'Geselecteerd adres gebruiken'
+        enter_address: 'Of voer een adres in'
         shipping_address_help: 'Alleen gebruikt als „Ander verzendadres” is aangevinkt.'
         cannot_complete: 'De bestelling kan nog niet worden geplaatst'
         place_order: 'Bestelling plaatsen'

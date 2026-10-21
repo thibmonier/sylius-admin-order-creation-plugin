@@ -43,7 +43,10 @@ tmonier_admin_order:
         apply_discount: 'Appliquer la remise'
         next_step: 'Suivant : %step%'
         address_book: "Carnet d'adresses"
-        use_address: 'Utiliser cette adresse'
+        known_addresses: 'Adresses connues'
+        known_addresses_help: 'Choisissez une adresse de l''entreprise ou du carnet d''adresses, puis ajustez-la ci-dessous si besoin.'
+        use_selected_address: 'Utiliser l''adresse sélectionnée'
+        enter_address: 'Ou saisir une adresse'
         shipping_address_help: 'Utilisée uniquement si « Adresse de livraison différente » est cochée.'
         cannot_complete: 'La commande ne peut pas encore être passée'
         place_order: 'Passer la commande'

@@ -17,6 +17,12 @@ doctrine:
                         dir: '%kernel.project_dir%/../../../tests/TestApplication/src/Entity'
                         prefix: Tests\Tmonier\SyliusAdminOrderCreationPlugin
 
+services:
+    # Stands for the address adapter of a company plugin (see AddressSourcesTest).
+    Tests\Tmonier\SyliusAdminOrderCreationPlugin\Address\FakeCompanyAddressSource:
+        tags:
+            - { name: tmonier_admin_order.address_source, priority: 10 }
+
 parameters:
     # DraftOwnershipTest boots kernels with this variable set to 1.
     env(TMONIER_ADMIN_ORDER_RESTRICT_DRAFTS): '0'
