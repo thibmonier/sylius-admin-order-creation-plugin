@@ -23,3 +23,4 @@ tmonier_admin_order:
     order_placed: 'The order %number% has been placed.'
     payment_link_sent: 'The payment link has been sent to the customer.'
     email_failed: 'The order has been placed but an e-mail could not be sent.'
+    address_not_available: 'This address is not available for this customer.'

@@ -43,7 +43,10 @@ tmonier_admin_order:
         apply_discount: 'Rabatt anwenden'
         next_step: 'Weiter: %step%'
         address_book: Adressbuch
-        use_address: 'Diese Adresse verwenden'
+        known_addresses: 'Bekannte Adressen'
+        known_addresses_help: 'Wählen Sie eine Adresse des Unternehmens oder des Adressbuchs und passen Sie sie bei Bedarf unten an.'
+        use_selected_address: 'Ausgewählte Adresse verwenden'
+        enter_address: 'Oder eine Adresse eingeben'
         shipping_address_help: 'Wird nur verwendet, wenn „Abweichende Lieferadresse“ aktiviert ist.'
         cannot_complete: 'Die Bestellung kann noch nicht aufgegeben werden'
         place_order: 'Bestellung aufgeben'

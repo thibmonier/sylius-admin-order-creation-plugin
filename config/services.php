@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
+use Tmonier\SyliusAdminOrderCreationPlugin\Address\AddressBookSource;
+use Tmonier\SyliusAdminOrderCreationPlugin\Address\OrderAddressSources;
+use Tmonier\SyliusAdminOrderCreationPlugin\Address\OrderAddressSourcesInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checker\SellableVariantChecker;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\DraftOrderCheckout;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\DraftOrderCheckoutInterface;
@@ -39,6 +42,16 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(AdminOrderCreationRepositoryInterface::class, 'tmonier_admin_order.repository.admin_order_creation');
 
     // Draft building
+    $services
+        ->set('tmonier_admin_order.address_source.address_book', AddressBookSource::class)
+        ->tag('tmonier_admin_order.address_source', ['priority' => 0])
+    ;
+    $services
+        ->set('tmonier_admin_order.address_sources', OrderAddressSources::class)
+        ->args([tagged_iterator('tmonier_admin_order.address_source')])
+    ;
+    $services->alias(OrderAddressSourcesInterface::class, 'tmonier_admin_order.address_sources');
+
     $services
         ->set('tmonier_admin_order.draft.factory', DraftOrderFactory::class)
         ->args([
@@ -214,6 +227,7 @@ return static function (ContainerConfigurator $container): void {
             service('sylius.manager.order'),
             service('tmonier_admin_order.checker.sellable_variant'),
             service('translator'),
+            service('tmonier_admin_order.address_sources'),
             param('tmonier_admin_order.send_confirmation_email_default'),
             service('logger'),
         ])

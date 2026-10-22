@@ -10,6 +10,7 @@ use Symfony\Component\Config\FileLocator;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
+use Tmonier\SyliusAdminOrderCreationPlugin\Address\OrderAddressSourceInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Mailer\Emails;
 
 final class TmonierSyliusAdminOrderCreationExtension extends AbstractResourceExtension implements PrependExtensionInterface
@@ -36,6 +37,8 @@ final class TmonierSyliusAdminOrderCreationExtension extends AbstractResourceExt
 
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
         $loader->load('services.php');
+
+        $container->registerForAutoconfiguration(OrderAddressSourceInterface::class)->addTag('tmonier_admin_order.address_source');
     }
 
     public function prepend(ContainerBuilder $container): void

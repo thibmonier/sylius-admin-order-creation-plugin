@@ -24,7 +24,7 @@ e-mail de confirmation. Gratuit et open source.
 | Prendre une commande par téléphone | Bouton **Créer une commande** sur la liste des commandes et sur la page du client (client présélectionné). Choisissez le canal et la langue, puis un client existant (recherche par e-mail ou par nom) ou un nouveau client invité à partir de son e-mail. |
 | Construire le panier | Recherche des produits par nom ou par code (variantes du canal), quantités, totaux en direct recalculés par le processeur de commande de Sylius (promotions de catalogue et de panier, coupon, livraison, taxes). |
 | Gestes commerciaux | **Prix unitaire personnalisé** facultatif par article et **remise manuelle sur la commande** avec un motif interne, tous deux protégés par un rôle et désactivables dans la configuration. La remise est répartie sur les unités comme une promotion de commande, si bien que les taxes, les factures, les e-mails et les pages de la boutique la prennent en charge. |
-| Adresses | Préremplies avec l'adresse par défaut du client, un clic pour utiliser n'importe quelle adresse du carnet d'adresses, adresse de livraison distincte si nécessaire. |
+| Adresses | Préremplies avec l'adresse par défaut du client, un choix parmi les adresses connues (celles de l'entreprise du client, quand un plugin les fournit, puis le carnet d'adresses), adresse de livraison distincte si nécessaire. |
 | Livraison et paiement | Uniquement les modes proposés par les résolveurs du cœur pour la commande (canal, zone, éligibilité), avec les frais de livraison. Les étapes que la boutique ignorerait sont ignorées. |
 | Passer la commande | Récapitulatif, validation du tunnel de commande de la boutique (stock, éligibilité), notes, **e-mail de confirmation de commande activé/désactivé**, **e-mail de lien de paiement** facultatif : le client paie depuis la page de commande de la boutique (`/order/{token}`, le flux standard de « nouveau paiement », avec n'importe quelle passerelle de paiement). |
 | Commander à nouveau | Action **Commander à nouveau** sur la page de commande : un nouveau brouillon avec les mêmes articles (toujours en vente, aux prix actuels), les mêmes adresses et le même client. |
@@ -217,6 +217,27 @@ public function onAdminOrderCreated(AdminOrderCreatedEvent $event): void
 
 Les briques de base sont des services : `DraftOrderFactoryInterface`, `DraftOrderModifierInterface`,
 `DraftOrderCheckoutInterface`, `ReordererInterface` (pour des imports ou une autre interface).
+
+### Sources d'adresses (adresses de l'entreprise, carnet d'adresses)
+
+L'étape adresse propose, en groupes de boutons radio, les adresses que le client peut réutiliser : d'abord celles des groupes ajoutés par d'autres plugins (par exemple les adresses de l'entreprise du client), puis le **carnet d'adresses** du client, puis le formulaire habituel pour saisir une adresse. L'adresse choisie préremplit les adresses de facturation et de livraison et reste modifiable ; la commande contient toujours une **copie**, jamais un lien vers l'adresse source. L'adresse est lue dans la liste blanche côté serveur des sources : un identifiant qu'aucune source n'offre pour ce client (autre client, autre entreprise) est refusé avec un message d'erreur et la commande n'est pas modifiée.
+
+Ajouter un groupe ne demande aucune modification du plugin, et le plugin ne dépend d'aucun d'eux : implémentez `Tmonier\SyliusAdminOrderCreationPlugin\Address\OrderAddressSourceInterface` dans le plugin qui connaît les adresses (l'interface est autoconfigurée avec l'étiquette `tmonier_admin_order.address_source` ; donnez à l'étiquette une `priority` pour ordonner les groupes, le plus élevé d'abord, le carnet d'adresses étant à 0). Une boutique sans un tel plugin voit simplement le carnet d'adresses.
+
+```php
+final class CompanyAddressSource implements OrderAddressSourceInterface
+{
+    public function getCode(): string { return 'company'; }
+
+    public function getLabel(): string { return 'my_plugin.ui.company_addresses'; } // clé de traduction (domaine messages)
+
+    public function getAddresses(OrderInterface $order): array
+    {
+        // Uniquement les adresses de l'entreprise du client, en adresses Sylius indexées par leur identifiant.
+        return $this->addressesOf($order->getCustomer());
+    }
+}
+```
 
 ## Limitations
 

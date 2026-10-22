@@ -23,3 +23,4 @@ tmonier_admin_order:
     order_placed: 'Die Bestellung %number% wurde aufgegeben.'
     payment_link_sent: 'Der Zahlungslink wurde an den Kunden gesendet.'
     email_failed: 'Die Bestellung wurde aufgegeben, aber eine E-Mail konnte nicht gesendet werden.'
+    address_not_available: 'Diese Adresse ist für diesen Kunden nicht verfügbar.'
