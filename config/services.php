@@ -13,7 +13,10 @@ use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\DraftOrderCheckoutInterface;
 use Tmonier\SyliusAdminOrderCreationPlugin\Checkout\OrderRowLock;
 use Tmonier\SyliusAdminOrderCreationPlugin\Command\PurgeDraftsCommand;
 use Tmonier\SyliusAdminOrderCreationPlugin\Controller\Admin\DraftOrderController;
-use Tmonier\SyliusAdminOrderCreationPlugin\Controller\Admin\DraftOrderStepsController;
+use Tmonier\SyliusAdminOrderCreationPlugin\Controller\Admin\DraftAddressStepController;
+use Tmonier\SyliusAdminOrderCreationPlugin\Controller\Admin\DraftItemsStepController;
+use Tmonier\SyliusAdminOrderCreationPlugin\Controller\Admin\DraftShippingPaymentStepController;
+use Tmonier\SyliusAdminOrderCreationPlugin\Controller\Admin\DraftSummaryStepController;
 use Tmonier\SyliusAdminOrderCreationPlugin\Discount\ManualDiscountProcessor;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderFactory;
 use Tmonier\SyliusAdminOrderCreationPlugin\Draft\DraftOrderFactoryInterface;
@@ -214,7 +217,38 @@ return static function (ContainerConfigurator $container): void {
     ;
 
     $services
-        ->set('tmonier_admin_order.controller.admin.draft_steps', DraftOrderStepsController::class)
+        ->set('tmonier_admin_order.controller.admin.draft_items_step', DraftItemsStepController::class)
+        ->args([
+            service('tmonier_admin_order.repository.admin_order_creation'),
+            service('tmonier_admin_order.draft.modifier'),
+            service('sylius.manager.order'),
+            service('tmonier_admin_order.checker.sellable_variant'),
+            service('translator'),
+        ])
+        ->call('setContainer', [service(\Psr\Container\ContainerInterface::class)])
+        ->tag('controller.service_arguments')
+        ->tag('container.service_subscriber')
+        ->public()
+    ;
+
+    $services
+        ->set('tmonier_admin_order.controller.admin.draft_address_step', DraftAddressStepController::class)
+        ->args([
+            service('tmonier_admin_order.repository.admin_order_creation'),
+            service('tmonier_admin_order.draft.modifier'),
+            service('tmonier_admin_order.checkout'),
+            service('sylius.factory.address'),
+            service('sylius.manager.order'),
+            service('tmonier_admin_order.address_sources'),
+        ])
+        ->call('setContainer', [service(\Psr\Container\ContainerInterface::class)])
+        ->tag('controller.service_arguments')
+        ->tag('container.service_subscriber')
+        ->public()
+    ;
+
+    $services
+        ->set('tmonier_admin_order.controller.admin.draft_shipping_payment_step', DraftShippingPaymentStepController::class)
         ->args([
             service('tmonier_admin_order.repository.admin_order_creation'),
             service('tmonier_admin_order.draft.modifier'),
@@ -223,11 +257,21 @@ return static function (ContainerConfigurator $container): void {
             service('sylius.resolver.payment_methods'),
             service('sylius.registry.shipping_calculator'),
             service('sylius.formatter.money'),
-            service('sylius.factory.address'),
             service('sylius.manager.order'),
-            service('tmonier_admin_order.checker.sellable_variant'),
-            service('translator'),
-            service('tmonier_admin_order.address_sources'),
+        ])
+        ->call('setContainer', [service(\Psr\Container\ContainerInterface::class)])
+        ->tag('controller.service_arguments')
+        ->tag('container.service_subscriber')
+        ->public()
+    ;
+
+    $services
+        ->set('tmonier_admin_order.controller.admin.draft_summary_step', DraftSummaryStepController::class)
+        ->args([
+            service('tmonier_admin_order.repository.admin_order_creation'),
+            service('tmonier_admin_order.draft.modifier'),
+            service('tmonier_admin_order.checkout'),
+            service('sylius.manager.order'),
             param('tmonier_admin_order.send_confirmation_email_default'),
             service('logger'),
         ])
