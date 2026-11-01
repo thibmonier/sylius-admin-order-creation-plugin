@@ -32,7 +32,7 @@ tmonier_admin_order_draft_items:
     requirements:
         id: '\d+'
     defaults:
-        _controller: tmonier_admin_order.controller.admin.draft_steps::itemsAction
+        _controller: tmonier_admin_order.controller.admin.draft_items_step::itemsAction
 
 tmonier_admin_order_draft_item_add:
     path: /order-drafts/{id}/items/add
@@ -40,7 +40,7 @@ tmonier_admin_order_draft_item_add:
     requirements:
         id: '\d+'
     defaults:
-        _controller: tmonier_admin_order.controller.admin.draft_steps::addItemAction
+        _controller: tmonier_admin_order.controller.admin.draft_items_step::addItemAction
 
 tmonier_admin_order_draft_items_update:
     path: /order-drafts/{id}/items/update
@@ -48,7 +48,7 @@ tmonier_admin_order_draft_items_update:
     requirements:
         id: '\d+'
     defaults:
-        _controller: tmonier_admin_order.controller.admin.draft_steps::updateItemsAction
+        _controller: tmonier_admin_order.controller.admin.draft_items_step::updateItemsAction
 
 tmonier_admin_order_draft_item_remove:
     path: /order-drafts/{id}/items/{itemId}/remove
@@ -57,7 +57,7 @@ tmonier_admin_order_draft_item_remove:
         id: '\d+'
         itemId: '\d+'
     defaults:
-        _controller: tmonier_admin_order.controller.admin.draft_steps::removeItemAction
+        _controller: tmonier_admin_order.controller.admin.draft_items_step::removeItemAction
 
 tmonier_admin_order_draft_manual_discount:
     path: /order-drafts/{id}/manual-discount
@@ -65,7 +65,7 @@ tmonier_admin_order_draft_manual_discount:
     requirements:
         id: '\d+'
     defaults:
-        _controller: tmonier_admin_order.controller.admin.draft_steps::manualDiscountAction
+        _controller: tmonier_admin_order.controller.admin.draft_items_step::manualDiscountAction
 
 tmonier_admin_order_draft_coupon:
     path: /order-drafts/{id}/coupon
@@ -73,7 +73,7 @@ tmonier_admin_order_draft_coupon:
     requirements:
         id: '\d+'
     defaults:
-        _controller: tmonier_admin_order.controller.admin.draft_steps::couponAction
+        _controller: tmonier_admin_order.controller.admin.draft_items_step::couponAction
 
 tmonier_admin_order_draft_address:
     path: /order-drafts/{id}/address
@@ -81,7 +81,7 @@ tmonier_admin_order_draft_address:
     requirements:
         id: '\d+'
     defaults:
-        _controller: tmonier_admin_order.controller.admin.draft_steps::addressAction
+        _controller: tmonier_admin_order.controller.admin.draft_address_step::addressAction
 
 tmonier_admin_order_draft_shipping_payment:
     path: /order-drafts/{id}/shipping-payment
@@ -89,7 +89,7 @@ tmonier_admin_order_draft_shipping_payment:
     requirements:
         id: '\d+'
     defaults:
-        _controller: tmonier_admin_order.controller.admin.draft_steps::shippingPaymentAction
+        _controller: tmonier_admin_order.controller.admin.draft_shipping_payment_step::shippingPaymentAction
 
 tmonier_admin_order_draft_summary:
     path: /order-drafts/{id}/summary
@@ -97,4 +97,4 @@ tmonier_admin_order_draft_summary:
     requirements:
         id: '\d+'
     defaults:
-        _controller: tmonier_admin_order.controller.admin.draft_steps::summaryAction
+        _controller: tmonier_admin_order.controller.admin.draft_summary_step::summaryAction
